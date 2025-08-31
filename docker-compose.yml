@@ -31,7 +31,7 @@ services:
         - VITE_DISCORD_CLIENT_ID=${VITE_DISCORD_CLIENT_ID}
     image: ghcr.io/kile/killua-frontend:latest
     ports:
-      - "3000:80"
+      - "3210:80"
     depends_on:
       - backend
     <<: *common-labels
