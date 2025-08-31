@@ -1,0 +1,4 @@
+# Development-specific configuration
+external:
+  api:
+    base-url: http://127.0.0.1:7650

@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    image: ghcr.io/kile/killua-backend:latest
+    env_file:
+      - ./.env
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - EXTERNAL_API_BASE_URL=${EXTERNAL_API_BASE_URL:-https://api.killua.dev}
+    expose:
+      - "8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_DISCORD_CLIENT_ID=${VITE_DISCORD_CLIENT_ID}
+    image: ghcr.io/kile/killua-frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+

@@ -1,0 +1,50 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Root environment (keep .env.example committed)
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors/IDE
+.vscode/
+.idea/
+*.iml
+
+# Vim/Swap
+*.swp
+*.swo
+
+# Node/Frontend
+node_modules/
+frontend/node_modules/
+frontend/.cache/
+frontend/.eslintcache
+frontend/.vite/
+frontend/dist/
+frontend/build/
+frontend/coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Java/Maven (Backend)
+backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# Coverage (generic)
+coverage/
+
+
