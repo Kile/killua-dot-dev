@@ -19,7 +19,7 @@ server {
 
     # All other routes -> frontend (SPA; frontend proxies /api to backend)
     location / {
-        proxy_pass http://127.0.0.1:3320;
+        proxy_pass http://127.0.0.1:3210;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
