@@ -1,5 +1,13 @@
 version: '3.9'
 
+x-common-labels: &common-labels
+  labels:
+    org.opencontainers.image.source: https://github.com/kile/killua-dot-dev
+    org.opencontainers.image.title: "Killua Website"
+    org.opencontainers.image.description: "The Killua Discord bot website"
+    org.opencontainers.image.version: "1.0.0"
+    org.opencontainers.image.authors: "kile@killua.dev"
+
 services:
   backend:
     build:
@@ -14,6 +22,7 @@ services:
       - "8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    <<: *common-labels
 
   frontend:
     build:
@@ -25,5 +34,6 @@ services:
       - "3000:80"
     depends_on:
       - backend
+    <<: *common-labels
 
 
