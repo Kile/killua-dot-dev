@@ -22,6 +22,11 @@ services:
       - "8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"   # number of files or file count
+        max-size: "50m" # file size
     <<: *common-labels
 
   frontend:
@@ -34,6 +39,11 @@ services:
       - "3210:80"
     depends_on:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"   # number of files or file count
+        max-size: "50m" # file size
     <<: *common-labels
 
 
