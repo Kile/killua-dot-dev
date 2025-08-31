@@ -7,11 +7,6 @@ import UserInfoHeader from '../components/UserInfoHeader';
 import StyledSelect from '../components/StyledSelect';
 import Loading from '../components/Loading';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
   PieChart,
