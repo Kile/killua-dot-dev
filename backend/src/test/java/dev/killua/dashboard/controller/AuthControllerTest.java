@@ -237,7 +237,7 @@ class AuthControllerTest {
             "id", "555",
             "username", "adminTarget"
         ));
-        Mockito.when(authService.fetchUserInfoByDiscordIdWithToken(eq("discord-secret-token"), eq("555")))
+        Mockito.when(authService.fetchUserInfoFromExternalApiById(eq("discord-secret-token"), eq("555")))
             .thenReturn(externalJson);
 
         mockMvc.perform(get("/api/auth/admin/user/555")

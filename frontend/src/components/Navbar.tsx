@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Bot, LogOut, ChevronDown, Settings, Shield, Crown } from 'lucide-react';
 import { checkAdminStatus } from '../services/adminService';
@@ -8,10 +8,12 @@ import { getPremiumTierInfo } from '../utils/premiumTiers';
 const Navbar: React.FC = () => {
   const { user, logout, login } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [apiIsPremium, setApiIsPremium] = useState<boolean>(false);
   const [apiPremiumTier, setApiPremiumTier] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const [logoSrc, setLogoSrc] = useState<string | null>('/brand/logo.svg');
   const [mobileOpen, setMobileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -42,13 +44,14 @@ const Navbar: React.FC = () => {
     checkAdmin();
   }, [user]);
 
-  // Fetch premium status from API (not Discord profile)
+  // Fetch user info from API (not Discord profile)
   useEffect(() => {
-    const fetchPremium = async () => {
+    const fetchUserInfo = async () => {
       try {
         if (!user) {
           setApiIsPremium(false);
           setApiPremiumTier(null);
+          setDisplayName(null);
           return;
         }
         const jwtToken = localStorage.getItem('discord_token');
@@ -60,11 +63,12 @@ const Navbar: React.FC = () => {
         const data = await res.json();
         setApiIsPremium(Boolean(data.is_premium));
         setApiPremiumTier(data.premium_tier ?? null);
+        setDisplayName(data.display_name ?? null);
       } catch (_) {
         // ignore
       }
     };
-    fetchPremium();
+    fetchUserInfo();
   }, [user]);
 
   const isActive = (path: string) => {
@@ -163,7 +167,7 @@ const Navbar: React.FC = () => {
                       )}
                     </div>
                     <span className="text-sm text-white font-medium hidden sm:block">
-                      {user.username}
+                      {displayName || user.username}
                     </span>
                     {apiIsPremium && apiPremiumTier && (
                       <span className="text-xs text-yellow-400 hidden sm:block">
@@ -203,6 +207,7 @@ const Navbar: React.FC = () => {
                           onClick={() => {
                             logout();
                             setIsDropdownOpen(false);
+                            navigate('/');
                           }}
                           className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-discord-darker transition-colors duration-200"
                         >

@@ -7,6 +7,7 @@ public class UserDto {
     private String username;
     private String discriminator;
     private String avatar;
+    private String banner;
     private String email;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
@@ -55,6 +56,14 @@ public class UserDto {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+
+    public String getBanner() {
+        return banner;
+    }
+
+    public void setBanner(String banner) {
+        this.banner = banner;
     }
 
     public String getEmail() {
@@ -112,6 +121,7 @@ public class UserDto {
                 ", username='" + username + '\'' +
                 ", discriminator='" + discriminator + '\'' +
                 ", avatar='" + avatar + '\'' +
+                ", banner='" + banner + '\'' +
                 ", email='" + email + '\'' +
                 ", createdAt=" + createdAt +
                 ", lastLogin=" + lastLogin +

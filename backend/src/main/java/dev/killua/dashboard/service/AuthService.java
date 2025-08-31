@@ -131,6 +131,7 @@ public class AuthService implements UserDetailsService {
         userDto.setUsername(user.getUsername());
         userDto.setDiscriminator(user.getDiscriminator());
         userDto.setAvatar(user.getAvatar());
+        userDto.setBanner(user.getBanner());
         userDto.setEmail(user.getEmail());
         userDto.setCreatedAt(user.getCreatedAt());
         userDto.setLastLogin(user.getLastLogin());
@@ -168,6 +169,7 @@ public class AuthService implements UserDetailsService {
             userDto.setUsername((String) userData.get("username"));
             userDto.setDiscriminator((String) userData.get("discriminator"));
             userDto.setAvatar((String) userData.get("avatar"));
+            userDto.setBanner((String) userData.get("banner"));
             userDto.setEmail((String) userData.get("email"));
             
             return userDto;
@@ -186,6 +188,7 @@ public class AuthService implements UserDetailsService {
         user.setUsername(userDto.getUsername());
         user.setDiscriminator(userDto.getDiscriminator());
         user.setAvatar(userDto.getAvatar());
+        user.setBanner(userDto.getBanner());
         user.setEmail(userDto.getEmail());
         user.setLastLogin(LocalDateTime.now());
         
@@ -202,6 +205,7 @@ public class AuthService implements UserDetailsService {
         userDto.setUsername(user.getUsername());
         userDto.setDiscriminator(user.getDiscriminator());
         userDto.setAvatar(user.getAvatar());
+        userDto.setBanner(user.getBanner());
         userDto.setEmail(user.getEmail());
         userDto.setCreatedAt(user.getCreatedAt());
         userDto.setLastLogin(user.getLastLogin());
@@ -256,7 +260,7 @@ public class AuthService implements UserDetailsService {
         }
     }
     
-    public String fetchUserInfoByDiscordIdWithToken(String discordToken, String discordId) throws Exception {
+    public String fetchUserInfoFromExternalApiById(String discordToken, String discordId) throws Exception {
         try {
             String apiUrl = externalApiBaseUrl + "/userinfo/" + discordId;
             

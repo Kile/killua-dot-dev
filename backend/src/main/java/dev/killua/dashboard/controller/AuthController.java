@@ -197,7 +197,7 @@ public class AuthController {
             }
             
             // Fetch user info by Discord ID using the Discord token
-            String userInfo = authService.fetchUserInfoByDiscordIdWithToken(discordToken, discordId);
+            String userInfo = authService.fetchUserInfoFromExternalApiById(discordToken, discordId);
             
             // Parse the JSON string and return it as a proper object
             Map<String, Object> userInfoMap = objectMapper.readValue(userInfo, Map.class);

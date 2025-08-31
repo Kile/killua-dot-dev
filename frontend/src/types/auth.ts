@@ -3,6 +3,7 @@ export interface DiscordUser {
   username: string;
   discriminator: string;
   avatar: string;
+  banner?: string;
   email?: string;
   createdAt?: string;
   lastLogin?: string;

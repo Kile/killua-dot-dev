@@ -29,6 +29,8 @@ const customIconMap: Record<string, string> = {
   'developer': 'developer.png',
   'artist': 'artist.png',
   'early_supporter': 'early_supporter.png',
+  'pro_hugger': 'pro_hugger.png',
+  'pro_hugged': 'pro_hugged.png',
   'full_book': 'full_book.png',
   '6002629': 'tier_1.png',
   '6002630': 'tier_2.png',
@@ -65,7 +67,7 @@ const BadgeIcon: React.FC<BadgeIconProps> = ({ badgeName, className = "w-6 h-6" 
   const customAsset = customIconMap[badgeName];
 
   return (
-    <div className="flex items-center space-x-2 p-2 bg-discord-dark rounded-lg border border-gray-600">
+    <div className="flex items-center space-x-2 p-2 bg-discord-dark rounded-lg border border-gray-600 whitespace-nowrap">
       {customAsset ? (
         <img
           src={`/badges/${customAsset}`}
@@ -79,14 +81,14 @@ const BadgeIcon: React.FC<BadgeIconProps> = ({ badgeName, className = "w-6 h-6" 
           return <IconComponent className={`${className} text-discord-blurple`} />;
         })()
       )}
-      <span className="text-white font-medium capitalize">
+      <span className="text-white font-medium">
         {badgeName === '6002629'
           ? 'Tier One'
           : badgeName === '6002630'
             ? 'Tier Two'
             : badgeName === '6002631'
               ? 'Tier Three'
-              : badgeName}
+              : badgeName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
       </span>
     </div>
   );

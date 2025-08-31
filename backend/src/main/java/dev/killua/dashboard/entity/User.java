@@ -20,6 +20,9 @@ public class User {
     @Column(name = "avatar")
     private String avatar;
     
+    @Column(name = "banner")
+    private String banner;
+    
     @Column(name = "email")
     private String email;
     
@@ -84,6 +87,14 @@ public class User {
         this.avatar = avatar;
     }
 
+    public String getBanner() {
+        return banner;
+    }
+
+    public void setBanner(String banner) {
+        this.banner = banner;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -139,6 +150,7 @@ public class User {
                 ", username='" + username + '\'' +
                 ", discriminator='" + discriminator + '\'' +
                 ", avatar='" + avatar + '\'' +
+                ", banner='" + banner + '\'' +
                 ", email='" + email + '\'' +
                 ", createdAt=" + createdAt +
                 ", lastLogin=" + lastLogin +

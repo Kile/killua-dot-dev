@@ -71,6 +71,10 @@ const TeamPage: React.FC = () => {
     }
   ];
 
+  const coreTeamNames = new Set(['Kile', 'WhoAmI', 'DerUSBstick']);
+  const coreTeam = teamMembers.filter(m => coreTeamNames.has(m.name));
+  const contributors = teamMembers.filter(m => !coreTeamNames.has(m.name));
+
   const getRoleIcon = (role: string) => {
     if (role.includes('Developer')) return <Code className="h-5 w-5" />;
     if (role.includes('Artist') || role.includes('Illustrator')) return <Palette className="h-5 w-5" />;
@@ -91,9 +95,10 @@ const TeamPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Team Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {teamMembers.map((member, index) => (
+        {/* Core Team */}
+        <h2 className="text-3xl md:text-4xl font-bold mb-6">Team</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          {coreTeam.map((member, index) => (
             <div
               key={index}
               className="bg-discord-dark border border-gray-600 rounded-xl overflow-hidden hover:transform hover:scale-105 transition-all duration-300 group"
@@ -169,6 +174,67 @@ const TeamPage: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {/* Contributors */}
+        {contributors.length > 0 && (
+          <>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Contributors</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {contributors.map((member, index) => (
+                <div
+                  key={index}
+                  className="bg-discord-dark border border-gray-600 rounded-xl overflow-hidden hover:transform hover:scale-105 transition-all duration-300 group"
+                >
+                  {/* Member Image */}
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div className="absolute top-4 right-4">
+                      <div className="flex items-center gap-2 bg-gray-700/90 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                        {getRoleIcon(member.role)}
+                        <span>{member.role}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-bold text-white mb-2">{member.name}</h3>
+                    <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                      {member.description}
+                    </p>
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wide">Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {member.skills.map((skill, skillIndex) => (
+                          <span key={skillIndex} className="bg-discord-darker border border-gray-600 text-gray-300 px-2 py-1 rounded-md text-xs">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      {member.github && (
+                        <a href={member.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded-lg transition-colors duration-200">
+                          <Github className="h-4 w-4" />
+                          <span className="text-sm">GitHub</span>
+                        </a>
+                      )}
+                      {member.linktree && (
+                        <a href={member.linktree} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-discord-blurple hover:bg-discord-blurple/80 text-white px-3 py-2 rounded-lg transition-colors duration-200">
+                          <ExternalLink className="h-4 w-4" />
+                          <span className="text-sm">Links</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Join the Team CTA */}
         <div className="mt-20 text-center">
