@@ -30,7 +30,7 @@ jobs:
 
         - name: Build image
           env:
-            VITE_DISCORD_CLIENT_ID: 756206646396452975
+            VITE_DISCORD_CLIENT_ID: "756206646396452975"
           run: docker compose build --push
 
 
