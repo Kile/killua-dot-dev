@@ -30,7 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf().disable()
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
@@ -38,12 +38,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/stats/**").permitAll()
                 .anyRequest().permitAll() // Temporarily allow all requests
             )
-            .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
-            .and()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            .exceptionHandling(exceptionHandling -> exceptionHandling
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+            )
+            .sessionManagement(sessionManagement -> sessionManagement
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            );
 
-        // Temporarily comment out JWT filter for testing
-        // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // Add JWT filter
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -29,6 +29,9 @@ public class DiscordTokenService {
      * Retrieve a Discord OAuth token using a JWT token
      */
     public String getDiscordToken(String jwtToken) {
+        if (jwtToken == null) {
+            return null;
+        }
         Optional<DiscordToken> token = discordTokenRepository.findByJwtToken(jwtToken);
         if (token.isPresent() && !token.get().isExpired()) {
             return token.get().getDiscordToken();
@@ -47,6 +50,9 @@ public class DiscordTokenService {
      * Check if a Discord token exists for a JWT
      */
     public boolean hasDiscordToken(String jwtToken) {
+        if (jwtToken == null) {
+            return false;
+        }
         Optional<DiscordToken> token = discordTokenRepository.findByJwtToken(jwtToken);
         return token.isPresent() && !token.get().isExpired();
     }
@@ -55,6 +61,9 @@ public class DiscordTokenService {
      * Get Discord token by Discord ID
      */
     public String getDiscordTokenByDiscordId(String discordId) {
+        if (discordId == null) {
+            return null;
+        }
         Optional<DiscordToken> token = discordTokenRepository.findByDiscordId(discordId);
         if (token.isPresent() && !token.get().isExpired()) {
             return token.get().getDiscordToken();

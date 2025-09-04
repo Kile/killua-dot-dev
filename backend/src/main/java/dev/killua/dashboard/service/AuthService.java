@@ -16,8 +16,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.util.HashMap;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,0 +1,111 @@
+/* Custom Prism.js styles for Discord theme */
+.prism-tomorrow {
+  background: #2f3136 !important;
+  color: #dcddde !important;
+}
+
+.prism-tomorrow code[class*="language-"],
+.prism-tomorrow pre[class*="language-"] {
+  background: #2f3136 !important;
+  color: #dcddde !important;
+  font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+}
+
+.prism-tomorrow .token.comment,
+.prism-tomorrow .token.prolog,
+.prism-tomorrow .token.doctype,
+.prism-tomorrow .token.cdata {
+  color: #72767d !important;
+}
+
+.prism-tomorrow .token.punctuation {
+  color: #dcddde !important;
+}
+
+.prism-tomorrow .token.namespace {
+  opacity: 0.7 !important;
+}
+
+.prism-tomorrow .token.property,
+.prism-tomorrow .token.tag,
+.prism-tomorrow .token.boolean,
+.prism-tomorrow .token.number,
+.prism-tomorrow .token.constant,
+.prism-tomorrow .token.symbol,
+.prism-tomorrow .token.deleted {
+  color: #ff6b6b !important;
+}
+
+.prism-tomorrow .token.selector,
+.prism-tomorrow .token.attr-name,
+.prism-tomorrow .token.string,
+.prism-tomorrow .token.char,
+.prism-tomorrow .token.builtin,
+.prism-tomorrow .token.inserted {
+  color: #51cf66 !important;
+}
+
+.prism-tomorrow .token.operator,
+.prism-tomorrow .token.entity,
+.prism-tomorrow .token.url,
+.prism-tomorrow .language-css .token.string,
+.prism-tomorrow .style .token.string {
+  color: #74c0fc !important;
+}
+
+.prism-tomorrow .token.atrule,
+.prism-tomorrow .token.attr-value,
+.prism-tomorrow .token.keyword {
+  color: #ffd43b !important;
+}
+
+.prism-tomorrow .token.function,
+.prism-tomorrow .token.class-name {
+  color: #f783ac !important;
+}
+
+.prism-tomorrow .token.regex,
+.prism-tomorrow .token.important,
+.prism-tomorrow .token.variable {
+  color: #ff922b !important;
+}
+
+.prism-tomorrow .token.important,
+.prism-tomorrow .token.bold {
+  font-weight: bold !important;
+}
+
+.prism-tomorrow .token.italic {
+  font-style: italic !important;
+}
+
+.prism-tomorrow .token.entity {
+  cursor: help !important;
+}
+
+/* Override Prism.js default styles */
+pre[class*="language-"] {
+  background: #2f3136 !important;
+  color: #dcddde !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  overflow: auto !important;
+}
+
+code[class*="language-"] {
+  background: transparent !important;
+  color: #dcddde !important;
+  font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+}

@@ -12,21 +12,16 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/api/stats")
 @CrossOrigin(origins = "*")
-public class StatsController {
+public class StatsController extends BaseController {
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Value("${external.api.base-url:https://api.killua.dev}")
-    private String externalApiBaseUrl;
+    public StatsController(RestTemplate restTemplate) {
+        super(restTemplate);
+    }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getStats() {
         try {
-            String base = (externalApiBaseUrl != null && !externalApiBaseUrl.isBlank())
-                ? externalApiBaseUrl
-                : "https://api.killua.dev";
-            String apiUrl = base + "/stats";
+            String apiUrl = getBaseUrl() + "/stats";
 
             @SuppressWarnings("unchecked")
             Map<String, Object> raw = restTemplate.getForObject(apiUrl, Map.class);

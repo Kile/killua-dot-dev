@@ -5,6 +5,12 @@ spring:
   application:
     name: killua-dashboard
   
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+      enabled: true
+  
   datasource:
     url: jdbc:h2:mem:killua_db
     driver-class-name: org.h2.Driver
@@ -59,6 +65,7 @@ logging:
 external:
   api:
     base-url: ${EXTERNAL_API_BASE_URL:https://api.killua.dev}
+    secret: ${EXTERNAL_API_SECRET:dicqap-5fefhA-pucriv}
 
 # Admin Configuration
 admin:

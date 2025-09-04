@@ -11,21 +11,16 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/commands")
 @CrossOrigin(origins = "*")
-public class CommandsController {
+public class CommandsController extends BaseController {
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Value("${external.api.base-url:https://api.killua.dev}")
-    private String externalApiBaseUrl;
+    public CommandsController(RestTemplate restTemplate) {
+        super(restTemplate);
+    }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllCommands() {
         try {
-            String base = (externalApiBaseUrl != null && !externalApiBaseUrl.isBlank())
-                ? externalApiBaseUrl
-                : "https://api.killua.dev";
-            String apiUrl = base + "/commands";
+            String apiUrl = getBaseUrl() + "/commands";
             Map<String, Object> commands = restTemplate.getForObject(apiUrl, Map.class);
             if (commands != null) {
                 return ResponseEntity.ok(commands);

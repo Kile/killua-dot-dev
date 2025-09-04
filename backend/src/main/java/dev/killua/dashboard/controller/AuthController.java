@@ -24,6 +24,25 @@ public class AuthController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    /**
+     * Extracts JWT token from Authorization header
+     * @param authHeader The Authorization header
+     * @return The JWT token or null if invalid
+     */
+    private String extractJwtToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        return authHeader.substring(7);
+    }
+
+    /**
+     * Creates a bad request response for invalid authorization header
+     */
+    private ResponseEntity<?> createInvalidAuthResponse() {
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid authorization header"));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
         String code = request.get("code");
@@ -45,11 +64,10 @@ public class AuthController {
 
     @GetMapping("/verify")
     public ResponseEntity<?> verifyToken(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid authorization header"));
+        String token = extractJwtToken(authHeader);
+        if (token == null) {
+            return createInvalidAuthResponse();
         }
-
-        String token = authHeader.substring(7);
         
         try {
             UserDto user = authService.verifyToken(token);
@@ -69,11 +87,10 @@ public class AuthController {
     
     @GetMapping("/discord-token")
     public ResponseEntity<?> getDiscordToken(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid authorization header"));
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
         }
-
-        String jwtToken = authHeader.substring(7);
         
         try {
             // Verify the JWT token first
@@ -97,11 +114,10 @@ public class AuthController {
     
     @GetMapping("/discord-token/debug")
     public ResponseEntity<?> debugDiscordToken(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid authorization header"));
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
         }
-
-        String jwtToken = authHeader.substring(7);
         
         try {
             // Verify the JWT token first
@@ -124,11 +140,10 @@ public class AuthController {
     
     @GetMapping("/userinfo")
     public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid authorization header"));
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
         }
-
-        String jwtToken = authHeader.substring(7);
         
         try {
             // Verify the JWT token first
@@ -154,11 +169,10 @@ public class AuthController {
     
     @GetMapping("/admin/check")
     public ResponseEntity<?> checkAdminStatus(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid authorization header"));
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
         }
-
-        String jwtToken = authHeader.substring(7);
         
         try {
             UserDto user = authService.verifyToken(jwtToken);
@@ -175,11 +189,10 @@ public class AuthController {
     
     @GetMapping("/admin/user/{discordId}")
     public ResponseEntity<?> getAdminUserInfo(@RequestHeader("Authorization") String authHeader, @PathVariable String discordId) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid authorization header"));
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
         }
-
-        String jwtToken = authHeader.substring(7);
         
         try {
             UserDto user = authService.verifyToken(jwtToken);
