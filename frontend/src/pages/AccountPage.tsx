@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Calendar, Shield, Target, Users, Award } from 'lucide-react';
+import { User, Mail, Calendar, Shield, Award } from 'lucide-react';
 import { fetchUserInfo } from '../services/userInfoService';
 import type { UserInfoResponse } from '../services/userInfoService';
 import BadgeIcon from '../components/BadgeIcon';

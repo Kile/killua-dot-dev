@@ -92,6 +92,7 @@ const Navbar: React.FC = () => {
     { path: '/premium', label: 'Premium' },
     { path: '/team', label: 'Team' },
     { path: '/commands', label: 'Commands' },
+    { path: '/news', label: 'News' },
     { path: '/disclaimer', label: 'Disclaimer' }
   ];
 

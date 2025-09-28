@@ -95,15 +95,16 @@ const UserStatsCharts: React.FC<UserStatsChartsProps> = ({ userInfo }) => {
         </h3>
         <div className="mb-4">
           <StyledSelect 
-            onChange={(e) => setSelectedGameStat(e.target.value)}
+            onChange={setSelectedGameStat}
             value={selectedGameStat}
-          >
-            <option value="rps_pvp">Rock Paper Scissors (PVP)</option>
-            <option value="rps_pve">Rock Paper Scissors (PVE)</option>
-            <option value="trivia_easy">Trivia (Easy)</option>
-            <option value="trivia_medium">Trivia (Medium)</option>
-            <option value="trivia_hard">Trivia (Hard)</option>
-          </StyledSelect>
+            options={[
+              { value: "rps_pvp", label: "Rock Paper Scissors (PVP)" },
+              { value: "rps_pve", label: "Rock Paper Scissors (PVE)" },
+              { value: "trivia_easy", label: "Trivia (Easy)" },
+              { value: "trivia_medium", label: "Trivia (Medium)" },
+              { value: "trivia_hard", label: "Trivia (Hard)" }
+            ]}
+          />
         </div>
         {(gameStatsData.length === 0 || gameStatsData.every(d => (d as any).value === 0)) ? (
           <div className="h-[200px] flex items-center justify-center text-gray-400">No data</div>
@@ -136,16 +137,17 @@ const UserStatsCharts: React.FC<UserStatsChartsProps> = ({ userInfo }) => {
         </h3>
         <div className="mb-4">
           <StyledSelect 
-            onChange={(e) => setSelectedActionStat(e.target.value)}
+            onChange={setSelectedActionStat}
             value={selectedActionStat}
-          >
-            <option value="hug">Hug</option>
-            <option value="pat">Pat</option>
-            <option value="slap">Slap</option>
-            <option value="poke">Poke</option>
-            <option value="tickle">Tickle</option>
-            <option value="cuddle">Cuddle</option>
-          </StyledSelect>
+            options={[
+              { value: "hug", label: "Hug" },
+              { value: "pat", label: "Pat" },
+              { value: "slap", label: "Slap" },
+              { value: "poke", label: "Poke" },
+              { value: "tickle", label: "Tickle" },
+              { value: "cuddle", label: "Cuddle" }
+            ]}
+          />
         </div>
         {(actionStatsData.length === 0 || actionStatsData.every(d => (d as any).value === 0)) ? (
           <div className="h-[200px] flex items-center justify-center text-gray-400">No data</div>
