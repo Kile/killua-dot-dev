@@ -5,12 +5,12 @@ export type AuthorInfo = {
 
 export type NotifyType = 'group' | 'specific';
 
-export type NotifyData = number[] | string; // Can be user IDs array or special string
+export type NotifyData = string[] | string; // Can be user IDs array or special string
 
 export type NotifyUsers = {
   type: NotifyType;
   data: NotifyData;
-};
+} | null;
 
 export type NewsType = 'news' | 'update' | 'post';
 

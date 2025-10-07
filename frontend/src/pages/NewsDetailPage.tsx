@@ -172,7 +172,11 @@ const NewsDetailPage: React.FC = () => {
   };
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="min-h-screen bg-discord-darker flex items-center justify-center">
+        <Loading />
+      </div>
+    );
   }
 
   if (error || !news) {

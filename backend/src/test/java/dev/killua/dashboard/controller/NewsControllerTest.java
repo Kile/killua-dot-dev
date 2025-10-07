@@ -51,12 +51,25 @@ class NewsControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Initialize NewsController with mocked RestTemplate
+        // Create NewsController with mocked RestTemplate
         newsController = new NewsController(restTemplate);
         
-        // Mock the external API calls in NewsService
-        when(restTemplate.exchange(anyString(), any(), any(), any(Class.class)))
-            .thenReturn(ResponseEntity.ok(new NewsResponseDataDto(Arrays.asList())));
+        // Inject the mocked services using reflection
+        try {
+            java.lang.reflect.Field newsServiceField = NewsController.class.getDeclaredField("newsService");
+            newsServiceField.setAccessible(true);
+            newsServiceField.set(newsController, newsService);
+            
+            java.lang.reflect.Field authServiceField = NewsController.class.getDeclaredField("authService");
+            authServiceField.setAccessible(true);
+            authServiceField.set(newsController, authService);
+            
+            java.lang.reflect.Field discordTokenServiceField = NewsController.class.getDeclaredField("discordTokenService");
+            discordTokenServiceField.setAccessible(true);
+            discordTokenServiceField.set(newsController, discordTokenService);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to inject mocked services", e);
+        }
     }
 
     @Test

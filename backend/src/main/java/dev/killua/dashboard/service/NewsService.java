@@ -22,6 +22,26 @@ public class NewsService {
     private DiscordTokenService discordTokenService;
 
     /**
+     * Convert notification data from Long integers to strings for frontend
+     */
+    private void convertNotificationDataForFrontend(NewsResponseDto newsResponse) {
+        if (newsResponse != null && newsResponse.getNotifyUsers() != null) {
+            NotifyUsersDto notifyUsers = newsResponse.getNotifyUsers();
+            if (notifyUsers.getNotifyType() == NotifyType.SPECIFIC && notifyUsers.getData() != null) {
+                Object data = notifyUsers.getData().getData();
+                if (data instanceof java.util.List) {
+                    @SuppressWarnings("unchecked")
+                    java.util.List<?> ids = (java.util.List<?>) data;
+                    java.util.List<String> stringIds = ids.stream()
+                        .map(id -> String.valueOf(id))
+                        .collect(java.util.stream.Collectors.toList());
+                    newsResponse.setNotifyUsers(new NotifyUsersDto(notifyUsers.getNotifyType(), new NotifyData(stringIds)));
+                }
+            }
+        }
+    }
+
+    /**
      * Get all news items from external API
      */
     public NewsResponseDataDto getAllNews(String discordToken) throws Exception {
@@ -49,7 +69,15 @@ public class NewsService {
                 throw new RuntimeException("Failed to fetch news from external API: " + response.getStatusCode());
             }
             
-            return response.getBody();
+            // Convert notification data from Long integers to strings for frontend
+            NewsResponseDataDto newsResponseData = response.getBody();
+            if (newsResponseData != null && newsResponseData.getNews() != null) {
+                for (NewsResponseDto newsResponse : newsResponseData.getNews()) {
+                    convertNotificationDataForFrontend(newsResponse);
+                }
+            }
+            
+            return newsResponseData;
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch news from external API: " + e.getMessage());
@@ -84,7 +112,11 @@ public class NewsService {
                 throw new RuntimeException("Failed to fetch news item from external API: " + response.getStatusCode());
             }
             
-            return response.getBody();
+            // Convert notification data from Long integers to strings for frontend
+            NewsResponseDto newsResponse = response.getBody();
+            convertNotificationDataForFrontend(newsResponse);
+            
+            return newsResponse;
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch news item from external API: " + e.getMessage());
@@ -136,7 +168,48 @@ public class NewsService {
             headers.setBearerAuth(discordToken);
             headers.setContentType(MediaType.APPLICATION_JSON);
             
-            HttpEntity<CreateNewsRequestDto> request = new HttpEntity<>(createRequest, headers);
+            // Convert notification data for external API (strings to Long integers)
+            CreateNewsRequestDto apiRequest = createRequest;
+            if (createRequest.getNotifyUsers() != null) {
+                NotifyUsersDto notifyUsers = createRequest.getNotifyUsers();
+                if (notifyUsers.getNotifyType() == NotifyType.SPECIFIC && notifyUsers.getData() != null) {
+                    Object data = notifyUsers.getData().getData();
+                    if (data instanceof java.util.List) {
+                        @SuppressWarnings("unchecked")
+                        java.util.List<?> ids = (java.util.List<?>) data;
+                        java.util.List<Long> longIds = ids.stream()
+                            .map(id -> {
+                                if (id instanceof String) {
+                                    try {
+                                        return Long.parseLong((String) id);
+                                    } catch (NumberFormatException e) {
+                                        return null;
+                                    }
+                                } else if (id instanceof Long) {
+                                    return (Long) id;
+                                } else if (id instanceof Number) {
+                                    return ((Number) id).longValue();
+                                }
+                                return null;
+                            })
+                            .filter(id -> id != null)
+                            .collect(java.util.stream.Collectors.toList());
+                        
+                        // Create new request with converted data
+                        apiRequest = new CreateNewsRequestDto();
+                        apiRequest.setTitle(createRequest.getTitle());
+                        apiRequest.setContent(createRequest.getContent());
+                        apiRequest.setNewsType(createRequest.getNewsType());
+                        apiRequest.setVersion(createRequest.getVersion());
+                        apiRequest.setPublished(createRequest.getPublished());
+                        apiRequest.setLinks(createRequest.getLinks());
+                        apiRequest.setImages(createRequest.getImages());
+                        apiRequest.setNotifyUsers(new NotifyUsersDto(notifyUsers.getNotifyType(), new NotifyData(longIds)));
+                    }
+                }
+            }
+            
+            HttpEntity<CreateNewsRequestDto> request = new HttpEntity<>(apiRequest, headers);
             
             ResponseEntity<NewsSaveResponseDto> response = restTemplate.exchange(
                 apiUrl, 
@@ -177,7 +250,47 @@ public class NewsService {
             if (editRequest.getPublished() != null) cleanRequest.put("published", editRequest.getPublished());
             if (editRequest.getLinks() != null && !editRequest.getLinks().isEmpty()) cleanRequest.put("links", editRequest.getLinks());
             if (editRequest.getImages() != null && !editRequest.getImages().isEmpty()) cleanRequest.put("images", editRequest.getImages());
-            if (editRequest.getNotifyUsers() != null) cleanRequest.put("notify_users", editRequest.getNotifyUsers());
+            if (editRequest.getNotifyUsers() != null) {
+                try {
+                    // Convert notification data for external API
+                    NotifyUsersDto notifyUsers = editRequest.getNotifyUsers();
+                    if (notifyUsers.getNotifyType() == NotifyType.SPECIFIC && notifyUsers.getData() != null) {
+                        // Convert string user IDs to numbers for the external API
+                        Object data = notifyUsers.getData().getData();
+                        if (data instanceof java.util.List) {
+                            @SuppressWarnings("unchecked")
+                            java.util.List<?> ids = (java.util.List<?>) data;
+                            java.util.List<Long> longIds = ids.stream()
+                                .map(id -> {
+                                    if (id instanceof String) {
+                                        try {
+                                            return Long.parseLong((String) id);
+                                        } catch (NumberFormatException e) {
+                                            return null;
+                                        }
+                                    } else if (id instanceof Long) {
+                                        return (Long) id;
+                                    } else if (id instanceof Number) {
+                                        return ((Number) id).longValue();
+                                    }
+                                    return null;
+                                })
+                                .filter(id -> id != null)
+                                .collect(java.util.stream.Collectors.toList());
+                            NotifyUsersDto convertedNotifyUsers = new NotifyUsersDto(notifyUsers.getNotifyType(), new NotifyData(longIds));
+                            cleanRequest.put("notify_users", convertedNotifyUsers);
+                        } else {
+                            cleanRequest.put("notify_users", notifyUsers);
+                        }
+                    } else {
+                        cleanRequest.put("notify_users", notifyUsers);
+                    }
+                } catch (Exception e) {
+                    // If conversion fails, use original data
+                    System.err.println("Failed to convert notification data: " + e.getMessage());
+                    cleanRequest.put("notify_users", editRequest.getNotifyUsers());
+                }
+            }
             
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(cleanRequest, headers);
             

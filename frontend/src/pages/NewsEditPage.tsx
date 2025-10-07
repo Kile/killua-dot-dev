@@ -11,6 +11,8 @@ import StyledSelect from '../components/StyledSelect';
 import ToggleSwitch from '../components/ToggleSwitch';
 import LinkTypeSelect from '../components/LinkTypeSelect';
 import UpdateProgression from '../components/UpdateProgression';
+import TagInput from '../components/TagInput';
+import CdnFileSelector from '../components/CdnFileSelector';
 import { getDefaultPlaceholderUrl, getDefaultPlaceholderAlt } from '../utils/imageUtils';
 
 const NewsEditPage: React.FC = () => {
@@ -32,68 +34,72 @@ const NewsEditPage: React.FC = () => {
     links: {},
     images: [],
     published: false,
-    notify_users: {
-      type: 'group',
-      data: 'all'
-    }
+    notify_users: null
   });
 
   const [linkInputs, setLinkInputs] = useState<{ key: string; value: string }[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<any>(null);
   const [showDefaultImage, setShowDefaultImage] = useState(true);
+  const [showCdnSelector, setShowCdnSelector] = useState(false);
 
-  // Check if user is logged in
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-discord-darker flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Not Logged In</h1>
-          <p className="text-gray-400 mb-4">Please log in to {isEdit ? 'edit' : 'create'} news articles.</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-discord-blurple hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Go to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
 
-  useEffect(() => {
-    if (isEdit && id) {
-      fetchNewsItem(id);
-    }
-  }, [id, isEdit]);
-
-  const fetchLastUpdate = async () => {
-    try {
-      const token = getToken();
-      const data = await fetchAllNews(token || undefined);
-      const updatePosts = data.news.filter((item: any) => item.type === 'update' && item.published);
-      if (updatePosts.length > 0) {
-        // Sort by timestamp and get the most recent
-        const sortedUpdates = updatePosts.sort((a: any, b: any) => 
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
-        setLastUpdate(sortedUpdates[0]);
-      } else {
-        setLastUpdate(null);
+  // Helper function to convert notification data to array format for UI
+  const getNotificationTargets = (notifyUsers: any): string[] => {
+    if (!notifyUsers || !notifyUsers.data) return [];
+    
+    if (Array.isArray(notifyUsers.data)) {
+      return notifyUsers.data.map((id: any) => String(id));
+    } else if (typeof notifyUsers.data === 'string') {
+      // For group type, return as single item
+      if (notifyUsers.type === 'group') {
+        return [notifyUsers.data];
       }
-    } catch (err) {
-      console.error('Error fetching last update:', err);
-      setLastUpdate(null);
+      // For specific type, if it's a comma-separated string, split it
+      if (notifyUsers.data.includes(',')) {
+        return notifyUsers.data.split(',').map((item: string) => item.trim()).filter((item: string) => item);
+      }
+      return [notifyUsers.data];
+    }
+    
+    return [];
+  };
+
+  // Helper function to convert array back to API format
+  const setNotificationTargets = (targets: string[]) => {
+    // Don't set to null if we're just removing tags - keep the notification settings active
+    if (targets.length === 0) {
+      setFormData(prev => ({ 
+        ...prev, 
+        notify_users: prev.notify_users ? { ...prev.notify_users, data: [] } : null
+      }));
+      return;
+    }
+
+    const currentType = formData.notify_users?.type;
+    
+    if (currentType === 'group') {
+      // For group type, always use the first target as a string
+      setFormData(prev => ({ 
+        ...prev, 
+        notify_users: prev.notify_users ? { ...prev.notify_users, data: targets[0] } : null
+      }));
+    } else {
+      // For specific type, keep as strings in frontend to preserve precision
+      setFormData(prev => ({ 
+        ...prev, 
+        notify_users: prev.notify_users ? { ...prev.notify_users, data: targets } : null
+      }));
     }
   };
 
-  useEffect(() => {
-    if (formData.type === 'update') {
-      fetchLastUpdate();
-    } else {
-      setLastUpdate(null);
-    }
-  }, [formData.type]);
+  // Helper function to handle type change and clear targets
+  const handleNotificationTypeChange = (newType: 'group' | 'specific') => {
+    setFormData(prev => ({ 
+      ...prev, 
+      notify_users: { type: newType, data: newType === 'group' ? '' : [] }
+    }));
+  };
 
   const fetchNewsItem = async (newsId: string) => {
     try {
@@ -127,9 +133,62 @@ const NewsEditPage: React.FC = () => {
     }
   };
 
+  const fetchLastUpdate = async () => {
+    try {
+      const token = getToken();
+      const data = await fetchAllNews(token || undefined);
+      const updatePosts = data.news.filter((item: any) => item.type === 'update' && item.published);
+      if (updatePosts.length > 0) {
+        // Sort by timestamp and get the most recent
+        const sortedUpdates = updatePosts.sort((a: any, b: any) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+        setLastUpdate(sortedUpdates[0]);
+      } else {
+        setLastUpdate(null);
+      }
+    } catch (err) {
+      console.error('Error fetching last update:', err);
+      setLastUpdate(null);
+    }
+  };
+
+  useEffect(() => {
+    if (isEdit && id) {
+      fetchNewsItem(id);
+    }
+  }, [id, isEdit]);
+
+  useEffect(() => {
+    if (formData.type === 'update') {
+      fetchLastUpdate();
+    } else {
+      setLastUpdate(null);
+    }
+  }, [formData.type]);
+
+  // Check if user is logged in
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-discord-darker flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Not Logged In</h1>
+          <p className="text-gray-400 mb-4">Please log in to {isEdit ? 'edit' : 'create'} news articles.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-discord-blurple hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const handleBackClick = () => {
     navigate('/admin?page=news');
   };
+
 
   const handleSave = async () => {
     const token = getToken();
@@ -243,8 +302,20 @@ const NewsEditPage: React.FC = () => {
     }));
   };
 
+  const handleCdnFileSelect = (fileUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      images: [...(prev.images || []), fileUrl]
+    }));
+    setShowCdnSelector(false);
+  };
+
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="min-h-screen bg-discord-darker flex items-center justify-center">
+        <Loading />
+      </div>
+    );
   }
 
   if (error && isEdit) {
@@ -368,7 +439,7 @@ const NewsEditPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={addLinkInput}
-                  className="text-discord-blurple hover:text-blue-400 text-sm"
+                  className="bg-discord-blurple hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
                 >
                   Add Link
                 </button>
@@ -406,14 +477,22 @@ const NewsEditPage: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-300">Images</label>
-                {(!formData.images || formData.images.length === 0) && !showDefaultImage && (
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setShowDefaultImage(true)}
-                    className="text-discord-blurple hover:text-blue-400 text-sm"
+                    onClick={() => setShowCdnSelector(true)}
+                    className="bg-discord-blurple hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
                   >
-                    Restore Default Image
+                    Select from CDN
                   </button>
-                )}
+                  {(!formData.images || formData.images.length === 0) && !showDefaultImage && (
+                    <button
+                      onClick={() => setShowDefaultImage(true)}
+                      className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm transition-colors"
+                    >
+                      Restore Default Image
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="space-y-4">
                 {/* Image Upload */}
@@ -495,34 +574,64 @@ const NewsEditPage: React.FC = () => {
             {/* Notification Settings */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Notification Settings</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Type</label>
+                  <label className="block text-sm text-gray-400 mb-1">Send Notification</label>
                   <StyledSelect
-                    value={formData.notify_users.type}
-                    onChange={(value) => setFormData(prev => ({ 
-                      ...prev, 
-                      notify_users: { ...prev.notify_users, type: value as 'group' | 'specific' }
-                    }))}
+                    value={formData.notify_users ? 'yes' : 'no'}
+                    onChange={(value) => {
+                      if (value === 'no') {
+                        setFormData(prev => ({ ...prev, notify_users: null }));
+                      } else {
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          notify_users: { type: 'group', data: 'all' }
+                        }));
+                      }
+                    }}
                     options={[
-                      { value: 'group', label: 'Group' },
-                      { value: 'specific', label: 'Specific Users' }
+                      { value: 'no', label: 'No notification' },
+                      { value: 'yes', label: 'Send notification' }
                     ]}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Target</label>
-                  <input
-                    type="text"
-                    value={typeof formData.notify_users.data === 'string' ? formData.notify_users.data : Array.isArray(formData.notify_users.data) ? formData.notify_users.data.join(', ') : ''}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      notify_users: { ...prev.notify_users, data: e.target.value }
-                    }))}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-discord-blurple focus:border-discord-blurple"
-                    placeholder="all, premium, or user IDs"
-                  />
-                </div>
+                {formData.notify_users && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Type</label>
+                      <StyledSelect
+                        value={formData.notify_users.type}
+                        onChange={(value) => handleNotificationTypeChange(value as 'group' | 'specific')}
+                        options={[
+                          { value: 'group', label: 'Group' },
+                          { value: 'specific', label: 'Specific Users' }
+                        ]}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Target</label>
+                      {formData.notify_users?.type === 'group' ? (
+                        <input
+                          type="text"
+                          value={typeof formData.notify_users.data === 'string' ? formData.notify_users.data : ''}
+                          onChange={(e) => setFormData(prev => ({ 
+                            ...prev, 
+                            notify_users: prev.notify_users ? { ...prev.notify_users, data: e.target.value } : null
+                          }))}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-discord-blurple focus:border-discord-blurple"
+                          placeholder="Enter group name"
+                        />
+                      ) : (
+                        <TagInput
+                          value={getNotificationTargets(formData.notify_users)}
+                          onChange={setNotificationTargets}
+                          placeholder="user IDs"
+                          className="w-full"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -546,6 +655,14 @@ const NewsEditPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* CDN File Selector Modal */}
+      <CdnFileSelector
+        isOpen={showCdnSelector}
+        onClose={() => setShowCdnSelector(false)}
+        onSelect={handleCdnFileSelect}
+        acceptedTypes={['image/*']}
+      />
     </div>
   );
 };

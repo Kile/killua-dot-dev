@@ -225,7 +225,11 @@ const NewsPage: React.FC = () => {
 
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="min-h-screen bg-discord-darker flex items-center justify-center">
+        <Loading />
+      </div>
+    );
   }
 
   if (error) {
@@ -397,7 +401,7 @@ const NewsPage: React.FC = () => {
                         <div className="mb-2">
                           {getLastUpdate(article) ? (
                             <UpdateProgression
-                              lastUpdate={getLastUpdate(article)}
+                              lastUpdate={getLastUpdate(article) || undefined}
                               currentUpdate={{
                                 title: article.title,
                                 version: article.version,
