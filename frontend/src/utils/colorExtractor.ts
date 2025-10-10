@@ -1,5 +1,5 @@
 export const extractDominantColor = (imageUrl: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
@@ -48,7 +48,7 @@ export const extractDominantColor = (imageUrl: string): Promise<string> => {
         } else {
           resolve('#5865F2'); // Fallback to Discord blurple
         }
-      } catch (error) {
+      } catch {
         resolve('#5865F2'); // Fallback to Discord blurple
       }
     };

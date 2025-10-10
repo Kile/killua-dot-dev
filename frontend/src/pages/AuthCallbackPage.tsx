@@ -71,7 +71,7 @@ const AuthCallbackPage: React.FC = () => {
           try {
             const errorData = await response.json();
             errorText = errorData.error || errorData.message || errorText;
-          } catch (_) { /* ignore parse errors */ }
+          } catch { /* ignore parse errors */ }
           setStatus('error');
           setErrorMessage(errorText);
           localStorage.removeItem('auth_processing'); // Clean up processing flag

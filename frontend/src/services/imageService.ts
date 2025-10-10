@@ -1,4 +1,3 @@
-import { useAuth } from '../contexts/AuthContext';
 
 export interface ImageUploadResponse {
   url: string;

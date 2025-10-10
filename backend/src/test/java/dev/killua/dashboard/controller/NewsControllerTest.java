@@ -13,16 +13,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.HttpEntity;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.lenient;
 
@@ -89,6 +84,7 @@ class NewsControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         NewsResponseDataDto result = (NewsResponseDataDto) response.getBody();
+        assertNotNull(result);
         assertEquals(2, result.getNews().size());
         
         // Verify that the service was called
@@ -108,6 +104,7 @@ class NewsControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, String> errorBody = (Map<String, String>) response.getBody();
+        assertNotNull(errorBody);
         assertTrue(errorBody.get("error").contains("Failed to fetch news"));
     }
 
@@ -131,6 +128,7 @@ class NewsControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         NewsResponseDto result = (NewsResponseDto) response.getBody();
+        assertNotNull(result);
         assertEquals(newsId, result.getId());
         assertEquals("Test News", result.getTitle());
     }
@@ -151,6 +149,7 @@ class NewsControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) response.getBody();
+        assertNotNull(result);
         assertTrue((Boolean) result.get("liked"));
         assertEquals(5, result.get("likes_count"));
     }
@@ -174,6 +173,7 @@ class NewsControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         NewsSaveResponseDto result = (NewsSaveResponseDto) response.getBody();
+        assertNotNull(result);
         assertEquals("new-news-id", result.getNewsId());
         assertEquals("message-id-123", result.getMessageId());
     }
@@ -196,6 +196,7 @@ class NewsControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, String> errorBody = (Map<String, String>) response.getBody();
+        assertNotNull(errorBody);
         assertEquals("Admin access required", errorBody.get("error"));
     }
 
@@ -220,6 +221,7 @@ class NewsControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) response.getBody();
+        assertNotNull(result);
         assertTrue((Boolean) result.get("success"));
         assertEquals("News updated", result.get("message"));
     }
@@ -243,6 +245,7 @@ class NewsControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, String> errorBody = (Map<String, String>) response.getBody();
+        assertNotNull(errorBody);
         assertEquals("Admin access required", errorBody.get("error"));
     }
 
@@ -266,6 +269,7 @@ class NewsControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) response.getBody();
+        assertNotNull(result);
         assertTrue((Boolean) result.get("success"));
         assertEquals("News deleted", result.get("message"));
     }
@@ -288,6 +292,7 @@ class NewsControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, String> errorBody = (Map<String, String>) response.getBody();
+        assertNotNull(errorBody);
         assertEquals("Admin access required", errorBody.get("error"));
     }
 

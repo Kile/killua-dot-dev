@@ -33,7 +33,7 @@ const SmartImageLayout: React.FC<SmartImageLayoutProps> = ({ images, className =
             height: img.naturalHeight,
             aspectRatio: img.naturalWidth / img.naturalHeight
           });
-        } catch (error) {
+        } catch {
           // Fallback to square aspect ratio if image fails to load
           dimensions.push({
             width: 1,

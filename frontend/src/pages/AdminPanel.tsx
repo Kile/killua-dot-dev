@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Shield, Award, Database, Folder, FileText } from 'lucide-react';
+import { Search, Shield, Database, Folder, FileText } from 'lucide-react';
 import { checkAdminStatus, fetchAdminUserInfo, type AdminUserInfoResponse } from '../services/adminService';
-import BadgeIcon from '../components/BadgeIcon';
-import UserInfoHeader from '../components/UserInfoHeader';
-import UserStatsGrid from '../components/UserStatsGrid';
-import UserStatsCharts from '../components/UserStatsCharts';
 import Loading from '../components/Loading';
 import FileManager from '../components/FileManager';
 import NewsAdminPanel from '../components/NewsAdminPanel';
+import UserAccountView from '../components/UserAccountView';
 
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -199,35 +196,18 @@ const AdminPanel: React.FC = () => {
               {/* User Results */}
               {searchedUser && (
                 <>
-                  {/* User Header */}
-                  <UserInfoHeader
-                    avatarUrl={searchedUser.avatar_url}
-                    displayName={searchedUser.display_name}
-                    discordId={searchedUser.id}
-                    jenny={searchedUser.jenny}
-                    votes={searchedUser.votes}
+                  {/* User Account View */}
+                  <UserAccountView 
+                    userInfo={searchedUser}
+                    isAdmin={true}
+                    targetUserId={searchedUser.id.toString()}
+                    onSettingsUpdate={() => {
+                      // Refresh the user info after settings update
+                      if (searchDiscordId) {
+                        handleSearch();
+                      }
+                    }}
                   />
-
-                  {/* Badges Section */}
-                  {searchedUser.badges && searchedUser.badges.length > 0 && (
-                    <div className="mb-8 bg-discord-darker rounded-lg p-6">
-                      <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-discord-blurple" />
-                        Badges
-                      </h2>
-                      <div className="flex flex-wrap gap-4">
-                        {searchedUser.badges.map((badge: string, index: number) => (
-                          <BadgeIcon key={index} badgeName={badge} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* User Stats Grid */}
-                  <UserStatsGrid userInfo={searchedUser} />
-
-                  {/* Stats Charts */}
-                  <UserStatsCharts userInfo={searchedUser} />
 
                   {/* Raw Data Section */}
                   <div className="bg-discord-darker rounded-lg p-6">

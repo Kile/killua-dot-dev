@@ -1,6 +1,7 @@
 package dev.killua.dashboard.controller;
 
 import dev.killua.dashboard.dto.UserDto;
+import dev.killua.dashboard.dto.UserEditPayloadDto;
 import dev.killua.dashboard.service.AuthService;
 import dev.killua.dashboard.service.DiscordTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,7 +139,7 @@ public class AuthController {
         }
     }
     
-    @GetMapping("/userinfo")
+    @GetMapping("/user/info")
     public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String authHeader) {
         String jwtToken = extractJwtToken(authHeader);
         if (jwtToken == null) {
@@ -215,6 +216,59 @@ public class AuthController {
             // Parse the JSON string and return it as a proper object
             Map<String, Object> userInfoMap = objectMapper.readValue(userInfo, Map.class);
             return ResponseEntity.ok(userInfoMap);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @PutMapping("/user/edit")
+    public ResponseEntity<?> editUserSettings(@RequestHeader("Authorization") String authHeader, @RequestBody UserEditPayloadDto userEditPayload) {
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
+        }
+        
+        try {
+            // Verify the JWT token first
+            UserDto user = authService.verifyToken(jwtToken);
+            if (user == null) {
+                return createInvalidAuthResponse();
+            }
+            
+            // Update user settings
+            authService.editUserSettings(jwtToken, user.getDiscordId(), userEditPayload);
+            
+            return ResponseEntity.ok(Map.of("success", true, "message", "User settings updated successfully"));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @PutMapping("/admin/user/{discordId}/edit")
+    public ResponseEntity<?> editAdminUserSettings(@RequestHeader("Authorization") String authHeader, @PathVariable String discordId, @RequestBody UserEditPayloadDto userEditPayload) {
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
+        }
+        
+        try {
+            // Verify the JWT token first
+            UserDto user = authService.verifyToken(jwtToken);
+            if (user == null) {
+                return createInvalidAuthResponse();
+            }
+            
+            // Check if user is admin
+            if (!authService.isAdmin(user.getDiscordId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Access denied. Admin privileges required."));
+            }
+            
+            // Update user settings for the specified user
+            authService.editUserSettings(jwtToken, discordId, userEditPayload);
+            
+            return ResponseEntity.ok(Map.of("success", true, "message", "User settings updated successfully"));
+            
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

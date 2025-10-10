@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Image, File } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { listFiles, getFileUrl, isImageFile } from '../services/fileService';
+import { listFiles, isImageFile } from '../services/fileService';
 
 interface CdnFile {
   name: string;

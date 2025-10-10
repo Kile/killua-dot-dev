@@ -56,7 +56,7 @@ const Navbar: React.FC = () => {
         }
         const jwtToken = localStorage.getItem('discord_token');
         if (!jwtToken) return;
-        const res = await fetch('/api/auth/userinfo', {
+        const res = await fetch('/api/auth/user/info', {
           headers: { Authorization: `Bearer ${jwtToken}` },
         });
         if (!res.ok) return;
@@ -64,7 +64,7 @@ const Navbar: React.FC = () => {
         setApiIsPremium(Boolean(data.is_premium));
         setApiPremiumTier(data.premium_tier ?? null);
         setDisplayName(data.display_name ?? null);
-      } catch (_) {
+      } catch {
         // ignore
       }
     };

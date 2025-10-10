@@ -29,7 +29,6 @@ class NewsServiceTest {
     @InjectMocks
     private NewsService newsService;
 
-    private final String externalApiBaseUrl = "https://api.killua.dev";
     private final String jwtToken = "test-jwt-token";
     private final String discordToken = "test-discord-token";
 
@@ -101,6 +100,7 @@ class NewsServiceTest {
         Map<String, Object> responseBody = Map.of("liked", true, "likes_count", 5);
 
         when(discordTokenService.getDiscordToken(jwtToken)).thenReturn(discordToken);
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = new ResponseEntity<>(responseBody, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(response);
@@ -142,6 +142,7 @@ class NewsServiceTest {
         Map<String, Object> responseBody = Map.of("success", true, "message", "News updated");
 
         when(discordTokenService.getDiscordToken(jwtToken)).thenReturn(discordToken);
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = new ResponseEntity<>(responseBody, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(response);
@@ -162,6 +163,7 @@ class NewsServiceTest {
         Map<String, Object> responseBody = Map.of("success", true, "message", "News deleted");
 
         when(discordTokenService.getDiscordToken(jwtToken)).thenReturn(discordToken);
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = new ResponseEntity<>(responseBody, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(response);
@@ -206,6 +208,7 @@ class NewsServiceTest {
         Map<String, Object> responseBody = Map.of("success", true, "message", "News updated");
 
         when(discordTokenService.getDiscordToken(jwtToken)).thenReturn(discordToken);
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = new ResponseEntity<>(responseBody, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(response);

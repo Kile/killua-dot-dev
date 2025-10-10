@@ -1,6 +1,8 @@
 package dev.killua.dashboard.service;
 
 import dev.killua.dashboard.dto.UserDto;
+import dev.killua.dashboard.dto.UserEditPayloadDto;
+import dev.killua.dashboard.dto.UserEditRequestDto;
 import dev.killua.dashboard.entity.User;
 import dev.killua.dashboard.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +81,7 @@ public class AuthService implements UserDetailsService {
             
             HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
             
+            @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
             
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
@@ -86,8 +89,11 @@ public class AuthService implements UserDetailsService {
             }
             
             Map<String, Object> tokenResponse = response.getBody();
-            String accessToken = (String) tokenResponse.get("access_token");
+            if (tokenResponse == null) {
+                throw new RuntimeException("No token response received from Discord");
+            }
             
+            String accessToken = (String) tokenResponse.get("access_token");
             if (accessToken == null) {
                 throw new RuntimeException("No access token received from Discord");
             }
@@ -149,6 +155,7 @@ public class AuthService implements UserDetailsService {
             
             HttpEntity<String> request = new HttpEntity<>(headers);
             
+            @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.exchange(
                 userInfoUrl, 
                 HttpMethod.GET, 
@@ -161,6 +168,9 @@ public class AuthService implements UserDetailsService {
             }
             
             Map<String, Object> userData = response.getBody();
+            if (userData == null) {
+                throw new RuntimeException("No user data received from Discord");
+            }
             
             UserDto userDto = new UserDto();
             userDto.setDiscordId((String) userData.get("id"));
@@ -228,7 +238,7 @@ public class AuthService implements UserDetailsService {
 
     public String fetchUserInfoFromExternalApi(String discordToken) throws Exception {
         try {
-            String apiUrl = externalApiBaseUrl + "/userinfo";
+            String apiUrl = externalApiBaseUrl + "/user/info";
             
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(discordToken);
@@ -260,7 +270,7 @@ public class AuthService implements UserDetailsService {
     
     public String fetchUserInfoFromExternalApiById(String discordToken, String discordId) throws Exception {
         try {
-            String apiUrl = externalApiBaseUrl + "/userinfo/" + discordId;
+            String apiUrl = externalApiBaseUrl + "/user/info/" + discordId;
             
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(discordToken);
@@ -292,5 +302,39 @@ public class AuthService implements UserDetailsService {
     
     public boolean isAdmin(String discordId) {
         return adminDiscordIds.contains(discordId);
+    }
+    
+    public void editUserSettings(String jwtToken, String userId, UserEditPayloadDto userEditPayload) throws Exception {
+        try {
+            String discordToken = discordTokenService.getDiscordToken(jwtToken);
+            String apiUrl = externalApiBaseUrl + "/user/edit/" + userId;
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(discordToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            UserEditRequestDto request = new UserEditRequestDto();
+            request.setUserId(userId);
+            request.setActionSettings(userEditPayload.getActionSettings());
+            request.setEmailNotifications(userEditPayload.getEmailNotifications());
+            request.setVotingReminder(userEditPayload.getVotingReminder());
+            
+            HttpEntity<UserEditRequestDto> httpEntity = new HttpEntity<>(request, headers);
+            
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.exchange(
+                apiUrl,
+                HttpMethod.PUT,
+                httpEntity,
+                Map.class
+            );
+            
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("External API returned error: " + response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update user settings: " + e.getMessage());
+        }
     }
 }

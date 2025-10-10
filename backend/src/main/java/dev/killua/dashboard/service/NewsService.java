@@ -138,6 +138,7 @@ public class NewsService {
             LikeRequestDto likeRequest = new LikeRequestDto(newsId);
             HttpEntity<LikeRequestDto> request = new HttpEntity<>(likeRequest, headers);
             
+            @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.exchange(
                 apiUrl, 
                 HttpMethod.POST, 
@@ -294,6 +295,7 @@ public class NewsService {
             
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(cleanRequest, headers);
             
+            @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.exchange(
                 apiUrl, 
                 HttpMethod.PUT, 
@@ -326,6 +328,7 @@ public class NewsService {
             
             HttpEntity<String> request = new HttpEntity<>(headers);
             
+            @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.exchange(
                 apiUrl, 
                 HttpMethod.DELETE, 

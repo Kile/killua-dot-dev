@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Link as LinkIcon, Calendar, Clock } from 'lucide-react';
+import { X, Copy, Link as LinkIcon } from 'lucide-react';
 import { generateFileLink } from '../services/fileService';
 import type { FileLink } from '../services/fileService';
 import DatePicker from 'react-datepicker';

@@ -77,7 +77,7 @@ interface UserInfoResponse {
 }
 
 export const fetchUserInfo = async (jwtToken: string): Promise<UserInfoResponse> => {
-  const response = await fetch('/api/auth/userinfo', {
+  const response = await fetch('/api/auth/user/info', {
     headers: {
       'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
