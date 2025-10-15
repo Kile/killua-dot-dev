@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Shield, Database, Folder, FileText } from 'lucide-react';
+import { Search, Shield, Database, Folder, FileText, RefreshCw } from 'lucide-react';
 import { checkAdminStatus, fetchAdminUserInfo, type AdminUserInfoResponse } from '../services/adminService';
 import Loading from '../components/Loading';
 import FileManager from '../components/FileManager';
 import NewsAdminPanel from '../components/NewsAdminPanel';
+import UpdateAdminPanel from '../components/UpdateAdminPanel';
 import UserAccountView from '../components/UserAccountView';
 
 const AdminPanel: React.FC = () => {
@@ -18,17 +19,17 @@ const AdminPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Get initial tab from URL parameter, default to 'search'
-  const getInitialTab = (): 'search' | 'files' | 'news' => {
+  const getInitialTab = (): 'search' | 'files' | 'news' | 'update' => {
     const page = searchParams.get('page');
-    if (page === 'news' || page === 'files') {
+    if (page === 'news' || page === 'files' || page === 'update') {
       return page;
     }
     return 'search';
   };
   
-  const [activeTab, setActiveTab] = useState<'search' | 'files' | 'news'>(getInitialTab());
+  const [activeTab, setActiveTab] = useState<'search' | 'files' | 'news' | 'update'>(getInitialTab());
 
-  const handleTabChange = (tab: 'search' | 'files' | 'news') => {
+  const handleTabChange = (tab: 'search' | 'files' | 'news' | 'update') => {
     setActiveTab(tab);
     // Update URL parameter
     if (tab === 'search') {
@@ -153,6 +154,17 @@ const AdminPanel: React.FC = () => {
               <FileText className="w-4 h-4" />
               <span>News</span>
             </button>
+            <button
+              onClick={() => handleTabChange('update')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
+                activeTab === 'update'
+                  ? 'bg-discord-blurple text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-discord-dark'
+              }`}
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Update</span>
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -226,8 +238,10 @@ const AdminPanel: React.FC = () => {
             </>
           ) : activeTab === 'files' ? (
             <FileManager token={localStorage.getItem('discord_token') || ''} />
-          ) : (
+          ) : activeTab === 'news' ? (
             <NewsAdminPanel />
+          ) : (
+            <UpdateAdminPanel />
           )}
         </div>
       </div>

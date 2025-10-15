@@ -2,11 +2,14 @@ package dev.killua.dashboard.controller;
 
 import dev.killua.dashboard.dto.UserDto;
 import dev.killua.dashboard.dto.UserEditPayloadDto;
+import dev.killua.dashboard.dto.CommandResultDto;
 import dev.killua.dashboard.service.AuthService;
 import dev.killua.dashboard.service.DiscordTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +27,12 @@ public class AuthController {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Value("${external.api.base-url}")
+    private String externalApiBaseUrl;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     /**
      * Extracts JWT token from Authorization header
@@ -271,6 +280,129 @@ public class AuthController {
             
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Test the update endpoint (admin only)
+     */
+    @PostMapping("/admin/update/test")
+    public ResponseEntity<?> testUpdateEndpoint(@RequestHeader("Authorization") String authHeader) {
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
+        }
+        
+        try {
+            // Verify user is admin
+            UserDto user = authService.verifyToken(jwtToken);
+            if (!authService.isAdmin(user.getDiscordId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Access denied. Admin privileges required."));
+            }
+            
+            // Get the Discord token from the service to use for the external API call
+            String discordToken = discordTokenService.getDiscordToken(jwtToken);
+            
+            if (discordToken == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Discord token not found"));
+            }
+            
+            // Call external API with test parameter
+            String apiUrl = externalApiBaseUrl + "/update?test=pass";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(discordToken);
+            
+            HttpEntity<String> request = new HttpEntity<>(headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, 
+                HttpMethod.POST, 
+                request, 
+                String.class
+            );
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return ResponseEntity.ok(Map.of("success", true, "message", "Test endpoint passed"));
+            } else {
+                return ResponseEntity.status(response.getStatusCode())
+                    .body(Map.of("error", "Test endpoint failed with status: " + response.getStatusCode()));
+            }
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to test endpoint: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Update the bot (admin only)
+     */
+    @PostMapping("/admin/update/bot")
+    public ResponseEntity<?> updateBot(@RequestHeader("Authorization") String authHeader) {
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
+        }
+        
+        try {
+            // Verify user is admin
+            UserDto user = authService.verifyToken(jwtToken);
+            if (!authService.isAdmin(user.getDiscordId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Access denied. Admin privileges required."));
+            }
+            
+            // Get the Discord token from the service to use for the external API call
+            String discordToken = discordTokenService.getDiscordToken(jwtToken);
+            
+            if (discordToken == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Discord token not found"));
+            }
+            
+            // Call external API without test parameter
+            String apiUrl = externalApiBaseUrl + "/update";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(discordToken);
+            
+            HttpEntity<String> request = new HttpEntity<>(headers);
+            
+            ResponseEntity<CommandResultDto> response = restTemplate.exchange(
+                apiUrl, 
+                HttpMethod.POST, 
+                request, 
+                CommandResultDto.class
+            );
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                CommandResultDto result = response.getBody();
+                if (result != null) {
+                    return ResponseEntity.ok(result);
+                } else {
+                    return ResponseEntity.status(502).body(Map.of("error", "Empty response from external API"));
+                }
+            } else {
+                return ResponseEntity.status(response.getStatusCode())
+                    .body(Map.of("error", "Update failed with status: " + response.getStatusCode()));
+            }
+            
+        } catch (Exception e) {
+            // Check if the error is due to connection being dropped (which indicates successful restart)
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && (
+                errorMessage.contains("Connection reset") ||
+                errorMessage.contains("Connection refused") ||
+                errorMessage.contains("Connection timed out") ||
+                errorMessage.contains("I/O error") ||
+                errorMessage.contains("SocketTimeoutException") ||
+                errorMessage.contains("ConnectException")
+            )) {
+                // Connection drop likely means the bot restarted successfully
+                return ResponseEntity.ok(new CommandResultDto(0, "Bot update initiated successfully. Connection dropped, indicating restart."));
+            }
+            
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to update bot: " + e.getMessage()));
         }
     }
 }

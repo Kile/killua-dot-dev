@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, User, Shield, Bell, Mail, Edit, HelpCircle, Save, AlertTriangle } from 'lucide-react';
+import { Award, User, Shield, Bell, Mail, Edit, HelpCircle, Save, AlertTriangle, Download } from 'lucide-react';
 import BadgeIcon from './BadgeIcon';
 import UserInfoHeader from './UserInfoHeader';
 import UserStatsGrid from './UserStatsGrid';
@@ -86,6 +86,42 @@ const UserAccountView: React.FC<UserAccountViewProps> = ({
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDownloadData = () => {
+    try {
+      // Create a clean copy of user data for download
+      const dataToDownload = {
+        ...userInfo,
+        downloadedAt: new Date().toISOString(),
+        note: 'This is your personal data exported from Killua Dashboard'
+      };
+
+      // Convert to JSON string with pretty formatting
+      const jsonString = JSON.stringify(dataToDownload, null, 2);
+      
+      // Create blob and download
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create temporary download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `killua-user-data-${userInfo.id}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setMessage({ type: 'success', text: 'Your data has been downloaded successfully!' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: 'Failed to download data. Please try again.' 
+      });
     }
   };
 
@@ -402,6 +438,30 @@ const UserAccountView: React.FC<UserAccountViewProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Data Download Section - Only show for non-admin users */}
+          {!isAdmin && (
+            <div className="mt-8 bg-discord-darker rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-white mb-2 flex items-center">
+                    <Download className="w-5 h-5 mr-2 text-discord-blurple" />
+                    Data Export
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    Download a complete copy of your personal data in JSON format
+                  </p>
+                </div>
+                <button
+                  onClick={handleDownloadData}
+                  className="flex items-center gap-2 bg-discord-blurple hover:bg-discord-blurple/80 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                >
+                  <Download className="w-4 h-4" />
+                  Request My Data
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
