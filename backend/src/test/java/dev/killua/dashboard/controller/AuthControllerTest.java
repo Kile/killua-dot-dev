@@ -169,14 +169,14 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/auth/userinfo - invalid header returns 400")
+    @DisplayName("GET /api/auth/user/info - invalid header returns 400")
     void userinfo_invalidHeader() throws Exception {
-        mockMvc.perform(get("/api/auth/userinfo"))
+        mockMvc.perform(get("/api/auth/user/info"))
             .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("GET /api/auth/userinfo - success returns parsed user map")
+    @DisplayName("GET /api/auth/user/info - success returns parsed user map")
     void userinfo_success() throws Exception {
         Mockito.when(authService.verifyToken(eq("jwt-token"))).thenReturn(buildUser());
         Mockito.when(discordTokenService.getDiscordToken(eq("jwt-token"))).thenReturn("discord-secret-token");
@@ -189,7 +189,7 @@ class AuthControllerTest {
         Mockito.when(authService.fetchUserInfoFromExternalApi(eq("discord-secret-token")))
             .thenReturn(externalJson);
 
-        mockMvc.perform(get("/api/auth/userinfo")
+        mockMvc.perform(get("/api/auth/user/info")
                 .header("Authorization", "Bearer jwt-token"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id", is("42")))

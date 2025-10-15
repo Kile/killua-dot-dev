@@ -20,4 +20,5 @@ export interface AuthContextType {
   setUser: (user: DiscordUser | null) => void;
   setIsLoggingIn: (isLoggingIn: boolean) => void;
   loading: boolean;
+  getToken: () => string | null;
 }

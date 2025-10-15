@@ -28,14 +28,14 @@ const PremiumPage: React.FC = () => {
       try {
         const jwtToken = localStorage.getItem('discord_token');
         if (!jwtToken) return;
-        const res = await fetch('/api/auth/userinfo', {
+        const res = await fetch('/api/auth/user/info', {
           headers: { Authorization: `Bearer ${jwtToken}` },
         });
         if (!res.ok) return;
         const data = await res.json();
         setApiIsPremium(Boolean(data.is_premium));
         setApiPremiumTier(data.premium_tier ?? null);
-      } catch (_) {
+      } catch {
         // ignore
       }
     };

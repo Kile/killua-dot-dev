@@ -17,7 +17,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -81,6 +80,7 @@ class AuthServiceTest {
         // Mock Discord token response
         Map<String, Object> tokenResponse = new HashMap<>();
         tokenResponse.put("access_token", "discord-access-token");
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> tokenResponseEntity = new ResponseEntity<>(tokenResponse, HttpStatus.OK);
 
         // Mock Discord user info response
@@ -90,6 +90,7 @@ class AuthServiceTest {
         userInfoResponse.put("discriminator", "1234");
         userInfoResponse.put("avatar", "avatar.png");
         userInfoResponse.put("email", "test@example.com");
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> userInfoResponseEntity = new ResponseEntity<>(userInfoResponse, HttpStatus.OK);
 
         // Mock repository and service calls
@@ -118,6 +119,7 @@ class AuthServiceTest {
     @Test
     void testProcessDiscordLogin_TokenExchangeFailure() {
         // Mock failed token response
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> failedResponse = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         when(restTemplate.postForEntity(anyString(), any(), eq(Map.class)))
                 .thenReturn(failedResponse);
@@ -130,6 +132,7 @@ class AuthServiceTest {
     void testProcessDiscordLogin_NoAccessToken() {
         // Mock response without access token
         Map<String, Object> tokenResponse = new HashMap<>();
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> tokenResponseEntity = new ResponseEntity<>(tokenResponse, HttpStatus.OK);
         when(restTemplate.postForEntity(anyString(), any(), eq(Map.class)))
                 .thenReturn(tokenResponseEntity);
@@ -143,9 +146,11 @@ class AuthServiceTest {
         // Mock successful token response
         Map<String, Object> tokenResponse = new HashMap<>();
         tokenResponse.put("access_token", "discord-access-token");
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> tokenResponseEntity = new ResponseEntity<>(tokenResponse, HttpStatus.OK);
 
         // Mock failed user info response
+        @SuppressWarnings("rawtypes")
         ResponseEntity<Map> failedUserInfoResponse = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         when(restTemplate.postForEntity(anyString(), any(), eq(Map.class)))
                 .thenReturn(tokenResponseEntity);
@@ -259,7 +264,7 @@ class AuthServiceTest {
     @Test
     void testFetchUserInfoFromExternalApi_EmptyResponse() {
         // Mock RestTemplate response
-        ResponseEntity<String> response = new ResponseEntity<>(null, HttpStatus.OK);
+        ResponseEntity<String> response = new ResponseEntity<>(null, new org.springframework.util.LinkedMultiValueMap<>(), HttpStatus.OK);
         when(restTemplate.exchange(anyString(), eq(org.springframework.http.HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(response);
 

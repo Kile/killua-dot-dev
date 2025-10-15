@@ -102,6 +102,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('discord_user');
   };
 
+  const getToken = () => {
+    return localStorage.getItem('discord_token');
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -109,7 +113,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     setUser,
     setIsLoggingIn,
-    loading
+    loading,
+    getToken
   };
 
   return (

@@ -67,9 +67,8 @@ const DisclaimerPage: React.FC = () => {
               <h2 className="text-2xl font-bold">Data Security</h2>
             </div>
             <p className="text-gray-300 leading-relaxed">
-              We implement industry-standard security measures to protect your data. All data is encrypted 
-              in transit and at rest. We regularly review and update our security practices to ensure the 
-              highest level of protection for your information.
+              We implement industry-standard security measures to protect your data. We regularly review 
+              and update our security practices to ensure the highest level of protection for your information.
             </p>
           </div>
 
@@ -120,9 +119,10 @@ const DisclaimerPage: React.FC = () => {
               Killua integrates with the following third-party services:
             </p>
             <ul className="list-disc list-inside text-gray-300 space-y-2 ml-4">
-              <li><strong>Discord:</strong> For bot functionality and user authentication</li>
-              <li><strong>Patreon:</strong> For premium subscription management</li>
-              <li><strong>Hosting Services:</strong> For bot operation and data storage</li>
+              <li><strong><a href="https://discord.com/" target="_blank" rel="noopener noreferrer" className="text-discord-blurple hover:text-discord-blurple/80">Discord</a>:</strong> For bot functionality and user authentication</li>
+              <li><strong><a href="https://www.patreon.com/" target="_blank" rel="noopener noreferrer" className="text-discord-blurple hover:text-discord-blurple/80">Patreon</a>:</strong> For premium subscription management</li>
+              <li><strong><a href="https://www.hetzner.com/" target="_blank" rel="noopener noreferrer" className="text-discord-blurple hover:text-discord-blurple/80">Hetzner</a>:</strong> For bot operation and hosting</li>
+              <li><strong><a href="https://www.mongodb.com/atlas" target="_blank" rel="noopener noreferrer" className="text-discord-blurple hover:text-discord-blurple/80">MongoDB Atlas</a>:</strong> For data storage</li>
             </ul>
             <p className="text-gray-300 leading-relaxed mt-4">
               Each of these services has their own privacy policies and data handling practices. 

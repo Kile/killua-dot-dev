@@ -17,7 +17,6 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -73,6 +72,7 @@ class FileControllerTest {
         assertTrue(response.getBody() instanceof java.util.Map);
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> responseBody = (java.util.Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
         
         assertTrue(responseBody.containsKey("url"));
         assertTrue(responseBody.containsKey("token"));
@@ -99,6 +99,7 @@ class FileControllerTest {
         assertTrue(response.getBody() instanceof java.util.Map);
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> responseBody = (java.util.Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
         assertEquals("Invalid authorization header", responseBody.get("error"));
     }
 
@@ -120,6 +121,7 @@ class FileControllerTest {
         assertTrue(response.getBody() instanceof java.util.Map);
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> responseBody = (java.util.Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
         assertEquals("Access denied. Admin privileges required.", responseBody.get("error"));
     }
 
@@ -143,6 +145,7 @@ class FileControllerTest {
         assertTrue(response.getBody() instanceof java.util.Map);
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> responseBody = (java.util.Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
         assertEquals("Expiry time must be in the future", responseBody.get("error"));
     }
 
@@ -166,6 +169,7 @@ class FileControllerTest {
         assertTrue(response.getBody() instanceof java.util.Map);
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> responseBody = (java.util.Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
         assertEquals("Expiry time must be in the future", responseBody.get("error"));
     }
 
@@ -196,6 +200,7 @@ class FileControllerTest {
         assertTrue(response.getBody() instanceof java.util.Map);
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> responseBody = (java.util.Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
         
         assertTrue(responseBody.containsKey("url"));
         assertTrue(responseBody.containsKey("token"));

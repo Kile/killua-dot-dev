@@ -26,7 +26,7 @@ const handleApiError = async (response: Response, defaultMessage: string): Promi
       const errorData = await response.json();
       const errorMessage = errorData.error || defaultMessage;
       throw new Error(errorMessage);
-    } catch (parseError) {
+    } catch {
       // If we can't parse the response, fall back to status text
       throw new Error(defaultMessage);
     }

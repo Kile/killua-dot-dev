@@ -1,31 +1,43 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Shield, Target, Users, Award, Database, Folder } from 'lucide-react';
+import { Search, Shield, Database, Folder, FileText, RefreshCw } from 'lucide-react';
 import { checkAdminStatus, fetchAdminUserInfo, type AdminUserInfoResponse } from '../services/adminService';
-import BadgeIcon from '../components/BadgeIcon';
-import UserInfoHeader from '../components/UserInfoHeader';
-import UserStatsGrid from '../components/UserStatsGrid';
-import UserStatsCharts from '../components/UserStatsCharts';
 import Loading from '../components/Loading';
 import FileManager from '../components/FileManager';
-import { 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+import NewsAdminPanel from '../components/NewsAdminPanel';
+import UpdateAdminPanel from '../components/UpdateAdminPanel';
+import UserAccountView from '../components/UserAccountView';
 
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [searchDiscordId, setSearchDiscordId] = useState('');
   const [searchedUser, setSearchedUser] = useState<AdminUserInfoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'search' | 'files'>('search');
+  
+  // Get initial tab from URL parameter, default to 'search'
+  const getInitialTab = (): 'search' | 'files' | 'news' | 'update' => {
+    const page = searchParams.get('page');
+    if (page === 'news' || page === 'files' || page === 'update') {
+      return page;
+    }
+    return 'search';
+  };
+  
+  const [activeTab, setActiveTab] = useState<'search' | 'files' | 'news' | 'update'>(getInitialTab());
 
-
+  const handleTabChange = (tab: 'search' | 'files' | 'news' | 'update') => {
+    setActiveTab(tab);
+    // Update URL parameter
+    if (tab === 'search') {
+      setSearchParams({}); // Remove page parameter for default tab
+    } else {
+      setSearchParams({ page: tab });
+    }
+  };
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -110,7 +122,7 @@ const AdminPanel: React.FC = () => {
           {/* Tab Navigation */}
           <div className="flex space-x-1 mb-8 bg-discord-darker rounded-lg p-1">
             <button
-              onClick={() => setActiveTab('search')}
+              onClick={() => handleTabChange('search')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
                 activeTab === 'search'
                   ? 'bg-discord-blurple text-white'
@@ -121,7 +133,7 @@ const AdminPanel: React.FC = () => {
               <span>User Search</span>
             </button>
             <button
-              onClick={() => setActiveTab('files')}
+              onClick={() => handleTabChange('files')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
                 activeTab === 'files'
                   ? 'bg-discord-blurple text-white'
@@ -130,6 +142,28 @@ const AdminPanel: React.FC = () => {
             >
               <Folder className="w-4 h-4" />
               <span>Files</span>
+            </button>
+            <button
+              onClick={() => handleTabChange('news')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
+                activeTab === 'news'
+                  ? 'bg-discord-blurple text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-discord-dark'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>News</span>
+            </button>
+            <button
+              onClick={() => handleTabChange('update')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
+                activeTab === 'update'
+                  ? 'bg-discord-blurple text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-discord-dark'
+              }`}
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Update</span>
             </button>
           </div>
 
@@ -174,35 +208,18 @@ const AdminPanel: React.FC = () => {
               {/* User Results */}
               {searchedUser && (
                 <>
-                  {/* User Header */}
-                  <UserInfoHeader
-                    avatarUrl={searchedUser.avatar_url}
-                    displayName={searchedUser.display_name}
-                    discordId={searchedUser.id}
-                    jenny={searchedUser.jenny}
-                    votes={searchedUser.votes}
+                  {/* User Account View */}
+                  <UserAccountView 
+                    userInfo={searchedUser}
+                    isAdmin={true}
+                    targetUserId={searchedUser.id.toString()}
+                    onSettingsUpdate={() => {
+                      // Refresh the user info after settings update
+                      if (searchDiscordId) {
+                        handleSearch();
+                      }
+                    }}
                   />
-
-                  {/* Badges Section */}
-                  {searchedUser.badges && searchedUser.badges.length > 0 && (
-                    <div className="mb-8 bg-discord-darker rounded-lg p-6">
-                      <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-discord-blurple" />
-                        Badges
-                      </h2>
-                      <div className="flex flex-wrap gap-4">
-                        {searchedUser.badges.map((badge: string, index: number) => (
-                          <BadgeIcon key={index} badgeName={badge} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* User Stats Grid */}
-                  <UserStatsGrid userInfo={searchedUser} />
-
-                  {/* Stats Charts */}
-                  <UserStatsCharts userInfo={searchedUser} />
 
                   {/* Raw Data Section */}
                   <div className="bg-discord-darker rounded-lg p-6">
@@ -219,8 +236,12 @@ const AdminPanel: React.FC = () => {
                 </>
               )}
             </>
-          ) : (
+          ) : activeTab === 'files' ? (
             <FileManager token={localStorage.getItem('discord_token') || ''} />
+          ) : activeTab === 'news' ? (
+            <NewsAdminPanel />
+          ) : (
+            <UpdateAdminPanel />
           )}
         </div>
       </div>

@@ -117,4 +117,56 @@ export const fetchAdminUserInfo = async (jwtToken: string, discordId: string): P
   return response.json();
 };
 
+export const updateAdminUserSettings = async (jwtToken: string, discordId: string, payload: any) => {
+  const response = await fetch(`/api/auth/admin/user/${discordId}/edit`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to update user settings');
+  }
+
+  return response.json();
+};
+
+export const testUpdateEndpoint = async (jwtToken: string) => {
+  const response = await fetch('/api/auth/admin/update/test', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${jwtToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to test update endpoint');
+  }
+
+  return response.json();
+};
+
+export const updateBot = async (jwtToken: string) => {
+  const response = await fetch('/api/auth/admin/update/bot', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${jwtToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to update bot');
+  }
+
+  return response.json();
+};
+
 export type { AdminCheckResponse, AdminUserInfoResponse };
