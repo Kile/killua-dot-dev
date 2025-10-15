@@ -109,15 +109,33 @@ docker compose up --build
 ## Environment Variables
 
 All secrets are read from a single root `.env` (loaded by start scripts and docker-compose).
-Required:
+
+### Required Variables
+
 ```
-VITE_DISCORD_CLIENT_ID=
-DISCORD_CLIENT_ID=
-DISCORD_CLIENT_SECRET=
-DISCORD_REDIRECT_URI=
-JWT_SECRET=
-EXTERNAL_API_BASE_URL=
+# Frontend build args
+VITE_DISCORD_CLIENT_ID=your_discord_client_id
+VITE_EXTERNAL_API_BASE_URL=https://api.killua.dev
+
+# Backend OAuth and JWT
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+DISCORD_REDIRECT_URI=http://localhost:5173/auth/callback
+
+# Backend application secrets/config
+JWT_SECRET=your_jwt_secret_key
+EXTERNAL_API_BASE_URL=https://api.killua.dev
 ```
+
+### Variable Descriptions
+
+- **VITE_DISCORD_CLIENT_ID**: Discord OAuth client ID for frontend (must match backend)
+- **DISCORD_CLIENT_ID**: Discord OAuth client ID for backend authentication
+- **DISCORD_CLIENT_SECRET**: Discord OAuth client secret for backend authentication
+- **DISCORD_REDIRECT_URI**: OAuth redirect URI (should match your Discord app settings)
+- **JWT_SECRET**: Secret key for signing JWT tokens (use a strong random string)
+- **EXTERNAL_API_BASE_URL**: Base URL for the external Killua API (backend uses this)
+- **VITE_EXTERNAL_API_BASE_URL**: Base URL for the external Killua API (frontend uses this)
 
 ### EXTERNAL_API_BASE_URL (Upstream API selection)
 
@@ -144,21 +162,6 @@ EXTERNAL_API_BASE_URL=https://api.killua.dev
 
 Compose default: if `EXTERNAL_API_BASE_URL` is not set, docker-compose defaults to `https://api.killua.dev`. Override it as shown above for local testing.
 
-## Additional Environment Variables
-
-Optional environment variables for enhanced functionality:
-
-```
-# Admin configuration
-ADMIN_DISCORD_IDS=123456789,987654321
-
-# CDN configuration
-CDN_BASE_URL=https://cdn.killua.dev
-CDN_TOKEN_SECRET=your-cdn-token-secret
-
-# External API configuration
-EXTERNAL_API_TIMEOUT=30000
-```
 
 ## API Endpoints
 
@@ -175,8 +178,11 @@ EXTERNAL_API_TIMEOUT=30000
 - `POST /api/news/like` - Like/unlike news article
 
 ### Admin Endpoints
-- `GET /api/admin/check` - Check admin status
-- `GET /api/admin/user/{discordId}` - Get user info by Discord ID
+- `GET /api/auth/admin/check` - Check admin status
+- `GET /api/auth/admin/user/{discordId}` - Get user info by Discord ID
+- `PUT /api/auth/admin/user/{discordId}/edit` - Edit user settings
+- `POST /api/auth/admin/update/test` - Test update endpoint
+- `POST /api/auth/admin/update/bot` - Trigger bot update
 - `POST /api/news/save` - Create news article
 - `PUT /api/news/{id}` - Edit news article
 - `DELETE /api/news/{id}` - Delete news article
