@@ -169,7 +169,7 @@ const NewsAdminPanel: React.FC = () => {
                   </span>
                   {newsItem.version && (
                     <span className="px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded-full">
-                      v{newsItem.version}
+                      {newsItem.version}
                     </span>
                   )}
                 </div>

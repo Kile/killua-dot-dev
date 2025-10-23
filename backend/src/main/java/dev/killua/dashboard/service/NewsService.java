@@ -169,6 +169,14 @@ public class NewsService {
             headers.setBearerAuth(discordToken);
             headers.setContentType(MediaType.APPLICATION_JSON);
             
+            // Process version field - ensure it has 'v' prefix if not already present
+            if (createRequest.getVersion() != null && !createRequest.getVersion().trim().isEmpty()) {
+                String version = createRequest.getVersion().trim();
+                if (!version.startsWith("v")) {
+                    createRequest.setVersion("v" + version);
+                }
+            }
+            
             // Convert notification data for external API (strings to Long integers)
             CreateNewsRequestDto apiRequest = createRequest;
             if (createRequest.getNotifyUsers() != null) {
@@ -241,6 +249,14 @@ public class NewsService {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(discordToken);
             headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            // Process version field - ensure it has 'v' prefix if not already present
+            if (editRequest.getVersion() != null && !editRequest.getVersion().trim().isEmpty()) {
+                String version = editRequest.getVersion().trim();
+                if (!version.startsWith("v")) {
+                    editRequest.setVersion("v" + version);
+                }
+            }
             
             // Create a clean request object with only non-null fields
             Map<String, Object> cleanRequest = new java.util.HashMap<>();

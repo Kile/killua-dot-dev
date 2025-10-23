@@ -59,10 +59,10 @@ const UpdateProgression: React.FC<UpdateProgressionProps> = ({
           onClick={handleLastUpdateClick}
           className="hover:text-blue-200 cursor-pointer"
         >
-          v{lastUpdate.version || 'N/A'}
+          {lastUpdate.version || 'N/A'}
         </button>
         <ChevronRight className="w-3 h-3" />
-        <span>v{currentUpdate?.version || 'TBD'}</span>
+        <span>{currentUpdate?.version || 'TBD'}</span>
       </div>
     );
   }
@@ -81,9 +81,9 @@ const UpdateProgression: React.FC<UpdateProgressionProps> = ({
           <span className="text-blue-200">{currentUpdate?.title || 'New Update'}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-          <span>v{lastUpdate.version || 'N/A'}</span>
+          <span>{lastUpdate.version || 'N/A'}</span>
           <ChevronRight className="w-3 h-3" />
-          <span>v{currentUpdate?.version || 'TBD'}</span>
+          <span>{currentUpdate?.version || 'TBD'}</span>
         </div>
       </div>
     );
