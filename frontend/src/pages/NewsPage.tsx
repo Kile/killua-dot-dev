@@ -385,7 +385,7 @@ const NewsPage: React.FC = () => {
                         <NewsTypeBadge type={article.type} size="sm" />
                         {article.version && (
                           <span className="px-2 py-1 bg-gray-600 text-gray-200 rounded-full text-xs font-medium">
-                            v{article.version}
+                            {article.version}
                           </span>
                         )}
                         {!article.published && (

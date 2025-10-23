@@ -53,7 +53,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
         elements.push(
           <ul key={`list-${elements.length}`} className="list-disc list-inside mb-4 space-y-1">
             {listItems.map((item, index) => (
-              <li key={index} className="text-gray-300">{renderBoldItalicUnderline(item)}</li>
+              <li key={index} className="text-gray-300">{renderInlineMarkdown(item)}</li>
             ))}
           </ul>
         );
@@ -134,8 +134,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
         continue;
       }
 
-      // Handle list items
-      if (trimmedLine.startsWith('- ')) {
+      // Handle list items (both - and +)
+      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('+ ')) {
         flushCodeBlock();
         const listItem = trimmedLine.substring(2);
         listItems.push(listItem);
@@ -192,7 +192,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
           rel="noopener noreferrer"
           className="text-discord-blurple hover:text-blue-400 underline"
         >
-          {match[1]}
+          {renderBoldItalicUnderline(match[1])}
         </a>
       );
       
@@ -209,52 +209,73 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
   };
 
   const renderBoldItalicUnderline = (text: string): React.ReactNode => {
-    const parts: React.ReactNode[] = [];
-    let currentIndex = 0;
-
-    // Handle bold **text**, italic *text*, and underline __text__
-    const boldItalicUnderlineRegex = /(\*\*([^*]+)\*\*|\*([^*]+)\*|__([^_]+)__)/g;
-    let match;
-    
-    while ((match = boldItalicUnderlineRegex.exec(text)) !== null) {
-      // Add text before the match
-      if (match.index > currentIndex) {
-        parts.push(text.slice(currentIndex, match.index));
-      }
-      
-      // Determine the formatting type
-      if (match[0].startsWith('**')) {
-        // Bold text
-        parts.push(
-          <strong key={`bold-${match.index}`} className="font-bold text-white">
-            {match[2]}
-          </strong>
-        );
-      } else if (match[0].startsWith('__')) {
-        // Underline text
-        parts.push(
-          <span key={`underline-${match.index}`} className="underline text-gray-300">
-            {match[4]}
+    // Process from outermost to innermost - underline first, then bold, then italic, then code
+    return processFormatting(text, [
+      // Process underline first (outermost)
+      { 
+        pattern: /__([^_]+)__/g, 
+        render: (content: string) => (
+          <span key={`underline-${Math.random()}`} className="underline text-gray-300">
+            {processFormatting(content, [
+              { pattern: /\*\*([^*]+)\*\*/g, render: (c: string) => <strong key={`bold-${Math.random()}`} className="font-bold text-white">{c}</strong> },
+              { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
+              { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
+            ])}
           </span>
-        );
-      } else {
-        // Italic text
-        parts.push(
-          <em key={`italic-${match.index}`} className="italic text-gray-200">
-            {match[3]}
+        )
+      },
+      // Process bold second
+      { 
+        pattern: /\*\*([^*]+)\*\*/g, 
+        render: (content: string) => (
+          <strong key={`bold-${Math.random()}`} className="font-bold text-white">
+            {processFormatting(content, [
+              { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
+              { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
+            ])}
+          </strong>
+        )
+      },
+      // Process italic third
+      { 
+        pattern: /\*([^*]+)\*/g, 
+        render: (content: string) => (
+          <em key={`italic-${Math.random()}`} className="italic text-gray-200">
+            {processFormatting(content, [
+              { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
+            ])}
           </em>
+        )
+      },
+      // Process inline code last (innermost)
+      { 
+        pattern: /`([^`]+)`/g, 
+        render: (content: string) => (
+          <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">
+            {content}
+          </code>
+        )
+      }
+    ]);
+  };
+
+  const processFormatting = (text: string, patterns: Array<{pattern: RegExp, render: (content: string) => React.ReactNode}>): React.ReactNode => {
+    for (const { pattern, render } of patterns) {
+      const match = pattern.exec(text);
+      if (match) {
+        const before = text.slice(0, match.index);
+        const after = text.slice(match.index + match[0].length);
+        
+        return (
+          <>
+            {before && processFormatting(before, patterns)}
+            {render(match[1])}
+            {after && processFormatting(after, patterns)}
+          </>
         );
       }
-      
-      currentIndex = match.index + match[0].length;
     }
-
-    // Add remaining text
-    if (currentIndex < text.length) {
-      parts.push(text.slice(currentIndex));
-    }
-
-    return parts.length > 1 ? parts : text;
+    return text;
   };
 
   return (

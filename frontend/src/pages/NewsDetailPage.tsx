@@ -232,7 +232,7 @@ const NewsDetailPage: React.FC = () => {
               <NewsTypeBadge type={news.type} size="md" />
               {news.version && (
                 <span className="px-3 py-1 bg-gray-700 text-gray-300 text-sm rounded-full">
-                  v{news.version}
+                  {news.version}
                 </span>
               )}
               {!news.published && (
