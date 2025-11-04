@@ -104,7 +104,7 @@ const UpdateProgression: React.FC<UpdateProgressionProps> = ({
           >
             <div className="text-xs text-gray-400 mb-1">Last Update</div>
             <div className="text-sm font-medium text-gray-200">{lastUpdate.title}</div>
-            <div className="text-xs text-gray-500">v{lastUpdate.version || 'N/A'} • {formatDate(lastUpdate.timestamp)}</div>
+            <div className="text-xs text-gray-500">{lastUpdate.version || 'N/A'} • {formatDate(lastUpdate.timestamp)}</div>
           </button>
           <div className="flex flex-col items-center">
             <ChevronRight className="w-4 h-4 text-blue-400" />
@@ -114,7 +114,7 @@ const UpdateProgression: React.FC<UpdateProgressionProps> = ({
               {isLatest ? 'Current Update' : 'This Update'}
             </div>
             <div className="text-sm font-medium text-blue-100">{currentUpdate?.title || 'New Update'}</div>
-            <div className="text-xs text-blue-400">v{currentUpdate?.version || 'TBD'} • {getCurrentUpdateDate()}</div>
+            <div className="text-xs text-blue-400">{currentUpdate?.version || 'TBD'} • {getCurrentUpdateDate()}</div>
           </div>
         </div>
       </div>

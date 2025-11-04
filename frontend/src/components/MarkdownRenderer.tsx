@@ -134,8 +134,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
         continue;
       }
 
-      // Handle list items (both - and +)
-      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('+ ')) {
+      // Handle list items (-, +, and *)
+      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('+ ') || trimmedLine.startsWith('* ')) {
         flushCodeBlock();
         const listItem = trimmedLine.substring(2);
         listItems.push(listItem);

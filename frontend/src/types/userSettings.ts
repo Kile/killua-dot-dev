@@ -25,3 +25,4 @@ export interface UserEditRequest {
   email_notifications?: EmailNotifications;
   voting_reminder?: boolean;
 }
+

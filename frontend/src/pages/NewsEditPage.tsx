@@ -139,11 +139,40 @@ const NewsEditPage: React.FC = () => {
       const data = await fetchAllNews(token || undefined);
       const updatePosts = data.news.filter((item: any) => item.type === 'update' && item.published);
       if (updatePosts.length > 0) {
-        // Sort by timestamp and get the most recent
-        const sortedUpdates = updatePosts.sort((a: any, b: any) => 
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
-        setLastUpdate(sortedUpdates[0]);
+        // If editing, find the update that comes before the current one chronologically
+        if (isEdit && id) {
+          // Find the current update being edited to get its timestamp
+          const currentUpdate = updatePosts.find((item: any) => item._id === id);
+          if (currentUpdate) {
+            const currentTimestamp = new Date(currentUpdate.timestamp).getTime();
+            // Find all updates that come before this one chronologically
+            const previousUpdates = updatePosts.filter((item: any) => {
+              const itemTimestamp = new Date(item.timestamp).getTime();
+              return item._id !== id && itemTimestamp < currentTimestamp;
+            });
+            if (previousUpdates.length > 0) {
+              // Sort by timestamp (newest first) and get the most recent previous update
+              const sortedPrevious = previousUpdates.sort((a: any, b: any) => 
+                new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+              );
+              setLastUpdate(sortedPrevious[0]);
+            } else {
+              setLastUpdate(null);
+            }
+          } else {
+            // If current update not found, just get the most recent one
+            const sortedUpdates = updatePosts.sort((a: any, b: any) => 
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+            );
+            setLastUpdate(sortedUpdates[0]);
+          }
+        } else {
+          // For new updates, get the most recent one
+          const sortedUpdates = updatePosts.sort((a: any, b: any) => 
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          );
+          setLastUpdate(sortedUpdates[0]);
+        }
       } else {
         setLastUpdate(null);
       }
@@ -165,7 +194,7 @@ const NewsEditPage: React.FC = () => {
     } else {
       setLastUpdate(null);
     }
-  }, [formData.type]);
+  }, [formData.type, id, isEdit]);
 
   // Check if user is logged in
   if (!user) {
@@ -363,7 +392,9 @@ const NewsEditPage: React.FC = () => {
           <div className="space-y-6">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Title <span className="text-red-400">*</span>
+              </label>
               <input
                 type="text"
                 value={formData.title}
@@ -375,7 +406,9 @@ const NewsEditPage: React.FC = () => {
 
             {/* Content */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Content</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Content <span className="text-red-400">*</span>
+              </label>
               <textarea
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}

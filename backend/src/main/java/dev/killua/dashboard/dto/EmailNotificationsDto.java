@@ -47,3 +47,4 @@ public class EmailNotificationsDto {
         this.posts = posts;
     }
 }
+

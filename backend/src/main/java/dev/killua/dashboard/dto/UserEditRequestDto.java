@@ -59,3 +59,4 @@ public class UserEditRequestDto {
         this.votingReminder = votingReminder;
     }
 }
+

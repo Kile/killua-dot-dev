@@ -83,3 +83,4 @@ public class ActionSettingsDto {
         this.tickle = tickle;
     }
 }
+

@@ -92,8 +92,10 @@ const UserAccountView: React.FC<UserAccountViewProps> = ({
   const handleDownloadData = () => {
     try {
       // Create a clean copy of user data for download
+      // Exclude fields that are not stored but only added for display (username, avatar, banner, avatar_url, banner_url)
+      const { display_name, username, avatar, banner, avatar_url, banner_url, ...storedData } = userInfo || {};
       const dataToDownload = {
-        ...userInfo,
+        ...storedData,
         downloadedAt: new Date().toISOString(),
         note: 'This is your personal data exported from Killua Dashboard'
       };

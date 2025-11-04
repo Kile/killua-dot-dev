@@ -20,3 +20,4 @@ export const updateUserSettings = async (jwtToken: string, settings: UserEditPay
     throw new Error(result.message || 'Failed to update user settings');
   }
 };
+
