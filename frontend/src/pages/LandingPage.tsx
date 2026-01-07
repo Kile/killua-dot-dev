@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, Users, Server, Heart, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bot, Users, Server, Heart, Star, X, ChevronRight } from 'lucide-react';
 import LinkButton from '../components/LinkButton';
 import Loading from '../components/Loading';
+import { botCategories } from '../utils/exploreCategories';
 
 interface Stats {
   guilds: number;
@@ -14,6 +16,7 @@ interface Stats {
 const LandingPage: React.FC = () => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -75,6 +78,66 @@ const LandingPage: React.FC = () => {
       highlight: 'much'
     }
   ];
+
+  const reviews = [
+    {
+      name: 'Geographs',
+      content: 'Very good bot. One of my favorites :D'
+    },
+    {
+      name: 'BzoidMaluko126',
+      content: 'Awesome bot, love the idea'
+    },
+    {
+      name: 'untildoomsday',
+      content: 'just an outstanding bot, i recommend highly.'
+    },
+    {
+      name: '\'kaitokid',
+      content: 'Interesting bot concept and excellent result. A variety of commands and a great way to have fun in a server, would recommend for smaller servers starting out. 5/5'
+    },
+    {
+      name: 'Coob The User',
+      content: 'Amazing bot! i\'m glad kile#0606 created it! it sparks new conversation, allows people to hug others, and more! i really enjoy using it, even if it has a bit of bugs owo 10/10 would recommend yes im being extra lmao, i really do love this bot though uwu'
+    },
+    {
+      name: 'Roselle',
+      content: 'amazing'
+    },
+    {
+      name: 'WhoAmI',
+      content: 'Great bot, transparent and many commands. A unique economy and many fun commands, including image manipulation.'
+    },
+    {
+      name: 'Nate Satorou',
+      content: 'Outstanding bot, has many commands including fun, hugs, economy, todo lists, image manipulation and much more, I can\'t want for more amazing updates'
+    },
+    {
+      name: 'bitomic',
+      content: 'Cool bot, huele a limón. Excelente servicio 11/10 would recommend.'
+    },
+    {
+      name: 'ClashCrafter',
+      content: 'Really nice Bot!!'
+    },
+    {
+      name: 'rollingswordfish',
+      content: 'Great bot'
+    },
+    {
+      name: 'N789EX',
+      content: 'Great bot idea! Can\'t wait for more updates!'
+    },
+    {
+      name: 'mAtERIaLgWoRL',
+      content: 'your mom is pog'
+    },
+    {
+      name: 'rotten_fetus_( ͡°з ͡°)',
+      content: 'The bot is nice i like collecting cards'
+    }
+  ];
+
 
   return (
     <div className="min-h-screen bg-discord-darker text-white">
@@ -147,6 +210,16 @@ const LandingPage: React.FC = () => {
                   Patreon
                 </LinkButton>
               </div>
+
+              {/* Wizard Prompt */}
+              <button
+                onClick={() => setWizardOpen(true)}
+                className="mt-8 text-gray-400 hover:text-white transition-colors duration-200 flex flex-col sm:flex-row items-center gap-2 mx-auto md:mx-0 group"
+              >
+                <span className="text-sm">Not sure where to start?</span>
+                <span className="text-discord-blurple group-hover:underline text-sm font-medium text-center">Find out what Killua can do for you</span>
+                <ChevronRight className="w-4 h-4 text-discord-blurple" />
+              </button>
             </div>
 
             {/* Right: Transparent illustration (no border) */}
@@ -214,6 +287,82 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Reviews Section */}
+      <div className="py-16 bg-discord-darker overflow-hidden">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Loved by Users</h2>
+          <p className="text-gray-400">
+            Real reviews from our{' '}
+            <a 
+              href="https://top.gg/bot/756206646396452975" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-discord-blurple hover:underline"
+            >
+              top.gg
+            </a>
+            {' '}page
+          </p>
+        </div>
+        
+        <div className="marquee-container">
+          <div className="marquee-track">
+            {/* First set of reviews */}
+            {reviews.map((review, index) => {
+              const avatarColors = ['bg-discord-blurple', 'bg-discord-green', 'bg-discord-yellow', 'bg-discord-fuchsia', 'bg-red-500'];
+              const colorClass = avatarColors[index % avatarColors.length];
+              return (
+                <div
+                  key={`review-1-${index}`}
+                  className="flex-shrink-0 w-80 mx-3 bg-discord-dark border border-gray-700 rounded-xl p-5"
+                >
+                  <div className="flex items-center mb-3">
+                    <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center p-2`}>
+                      <img src="/brand/discord-logo.png" alt="" className="w-6 h-6 object-contain" />
+                    </div>
+                    <div className="ml-3">
+                      <div className="font-semibold text-white">{review.name}</div>
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed">{review.content}</p>
+                </div>
+              );
+            })}
+            {/* Duplicate set for seamless loop */}
+            {reviews.map((review, index) => {
+              const avatarColors = ['bg-discord-blurple', 'bg-discord-green', 'bg-discord-yellow', 'bg-discord-fuchsia', 'bg-red-500'];
+              const colorClass = avatarColors[index % avatarColors.length];
+              return (
+                <div
+                  key={`review-2-${index}`}
+                  className="flex-shrink-0 w-80 mx-3 bg-discord-dark border border-gray-700 rounded-xl p-5"
+                >
+                  <div className="flex items-center mb-3">
+                    <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center p-2`}>
+                      <img src="/brand/discord-logo.png" alt="" className="w-6 h-6 object-contain" />
+                    </div>
+                    <div className="ml-3">
+                      <div className="font-semibold text-white">{review.name}</div>
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed">{review.content}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* CTA Section */}
       <div className="py-24 bg-gradient-to-r from-discord-blurple to-discord-fuchsia">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
@@ -241,6 +390,54 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Wizard Modal */}
+      {wizardOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setWizardOpen(false)}
+          />
+          
+          {/* Modal */}
+          <div className="relative bg-discord-dark border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-600">
+              <h3 className="text-xl font-bold text-white">What can Killua help you with?</h3>
+              <button
+                onClick={() => setWizardOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+              <p className="text-gray-400 mb-6 text-center">I'm looking for a bot that...</p>
+              <div className="space-y-3">
+                {botCategories.map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/explore/${category.id}`}
+                    onClick={() => setWizardOpen(false)}
+                    className="w-full flex items-center gap-4 p-4 bg-discord-darker hover:bg-discord-darker/80 border border-gray-700 hover:border-discord-blurple/50 rounded-xl transition-all duration-200 group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-discord-blurple/20 flex items-center justify-center text-discord-blurple group-hover:bg-discord-blurple group-hover:text-white transition-colors">
+                      {category.icon}
+                    </div>
+                    <span className="text-left text-gray-200 group-hover:text-white transition-colors flex-1">
+                      {category.title}
+                    </span>
+                    <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-discord-blurple transition-colors" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

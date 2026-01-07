@@ -21,3 +21,6 @@ export const updateUserSettings = async (jwtToken: string, settings: UserEditPay
   }
 };
 
+
+
+

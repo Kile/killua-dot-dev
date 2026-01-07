@@ -1,6 +1,7 @@
 export interface DiscordUser {
   discordId: string;
   username: string;
+  displayName?: string;
   discriminator: string;
   avatar: string;
   banner?: string;
@@ -12,6 +13,17 @@ export interface DiscordUser {
   premiumExpires?: string;
 }
 
+export interface DiscordGuild {
+  id: string;
+  name: string;
+  icon: string | null;
+  owner: boolean;
+  permissions: string;
+  features: string[];
+  editable: boolean;
+  isPremium: boolean;
+}
+
 export interface AuthContextType {
   user: DiscordUser | null;
   isAuthenticated: boolean;
@@ -21,4 +33,9 @@ export interface AuthContextType {
   setIsLoggingIn: (isLoggingIn: boolean) => void;
   loading: boolean;
   getToken: () => string | null;
+  // Guilds cache
+  guilds: DiscordGuild[] | null;
+  guildsLoading: boolean;
+  fetchGuilds: () => Promise<DiscordGuild[]>;
+  clearGuildsCache: () => void;
 }

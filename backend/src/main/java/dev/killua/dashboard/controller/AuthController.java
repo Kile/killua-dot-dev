@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
@@ -33,6 +34,24 @@ public class AuthController {
 
     @Autowired
     private RestTemplate restTemplate;
+    
+    // Cache for user guilds to reduce Discord API calls (TTL: 2 minutes)
+    private static final long GUILDS_CACHE_TTL_MS = 2 * 60 * 1000;
+    private final ConcurrentHashMap<String, GuildsCacheEntry> guildsCache = new ConcurrentHashMap<>();
+    
+    private static class GuildsCacheEntry {
+        final java.util.List<Map<String, Object>> guilds;
+        final long timestamp;
+        
+        GuildsCacheEntry(java.util.List<Map<String, Object>> guilds) {
+            this.guilds = guilds;
+            this.timestamp = System.currentTimeMillis();
+        }
+        
+        boolean isExpired() {
+            return System.currentTimeMillis() - timestamp > GUILDS_CACHE_TTL_MS;
+        }
+    }
 
     /**
      * Extracts JWT token from Authorization header
@@ -172,6 +191,166 @@ public class AuthController {
             // Parse the JSON string and return it as a proper object
             Map<String, Object> userInfoMap = objectMapper.readValue(userInfo, Map.class);
             return ResponseEntity.ok(userInfoMap);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/user/guilds")
+    public ResponseEntity<?> getUserGuilds(@RequestHeader("Authorization") String authHeader) {
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
+        }
+        
+        try {
+            // Verify the JWT token first
+            UserDto user = authService.verifyToken(jwtToken);
+            String userId = user.getDiscordId();
+            
+            // Get the Discord token from the service
+            String discordToken = discordTokenService.getDiscordToken(jwtToken);
+            
+            if (discordToken == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Discord token not found. Please re-login to grant guilds permission."));
+            }
+            
+            java.util.List<Map<String, Object>> allGuilds;
+            
+            // Check cache first
+            GuildsCacheEntry cachedEntry = guildsCache.get(userId);
+            if (cachedEntry != null && !cachedEntry.isExpired()) {
+                // Use cached guilds - make a copy to avoid modifying cached data
+                allGuilds = new java.util.ArrayList<>();
+                for (Map<String, Object> guild : cachedEntry.guilds) {
+                    allGuilds.add(new java.util.HashMap<>(guild));
+                }
+            } else {
+                // Fetch guilds from Discord API using the Discord token
+                String guildsUrl = "https://discord.com/api/users/@me/guilds";
+                
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(discordToken);
+                
+                HttpEntity<String> request = new HttpEntity<>(headers);
+                
+                ResponseEntity<String> response = restTemplate.exchange(
+                    guildsUrl,
+                    HttpMethod.GET,
+                    request,
+                    String.class
+                );
+                
+                if (response.getStatusCode() != HttpStatus.OK) {
+                    return ResponseEntity.status(response.getStatusCode())
+                        .body(Map.of("error", "Failed to fetch guilds from Discord"));
+                }
+                
+                // Parse the JSON array
+                allGuilds = objectMapper.readValue(
+                    response.getBody(), 
+                    objectMapper.getTypeFactory().constructCollectionType(java.util.List.class, Map.class)
+                );
+                
+                // Cache the raw guilds (before filtering)
+                guildsCache.put(userId, new GuildsCacheEntry(allGuilds));
+                
+                // Clean up expired entries periodically (simple cleanup)
+                if (guildsCache.size() > 100) {
+                    guildsCache.entrySet().removeIf(entry -> entry.getValue().isExpired());
+                }
+            }
+            
+            // MANAGE_SERVER permission is bit 5 (1 << 5 = 32)
+            final long MANAGE_SERVER = 1L << 5;
+            
+            // Filter guilds where user has MANAGE_SERVER permission
+            java.util.List<Map<String, Object>> manageableGuilds = allGuilds.stream()
+                .filter(guild -> {
+                    Object permissionsObj = guild.get("permissions");
+                    if (permissionsObj == null) return false;
+                    try {
+                        long permissions = Long.parseLong(permissionsObj.toString());
+                        return (permissions & MANAGE_SERVER) != 0;
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                })
+                .collect(java.util.stream.Collectors.toList());
+            
+            // Extract guild IDs as integers for the external API (API expects int array)
+            java.util.List<Long> guildIdsForApi = manageableGuilds.stream()
+                .map(guild -> Long.parseLong(guild.get("id").toString()))
+                .collect(java.util.stream.Collectors.toList());
+            
+            // Call external API to check which guilds are editable and premium
+            // Store as strings to preserve precision for JavaScript
+            java.util.Set<String> editableGuildIds = new java.util.HashSet<>();
+            java.util.Set<String> premiumGuildIds = new java.util.HashSet<>();
+            
+            if (!guildIdsForApi.isEmpty()) {
+                try {
+                    String editableUrl = externalApiBaseUrl + "/guild/editable";
+                    
+                    HttpHeaders editableHeaders = new HttpHeaders();
+                    editableHeaders.setBearerAuth(discordToken);
+                    editableHeaders.setContentType(MediaType.APPLICATION_JSON);
+                    
+                    Map<String, Object> requestBody = Map.of("guild_ids", guildIdsForApi);
+                    HttpEntity<Map<String, Object>> editableRequest = new HttpEntity<>(requestBody, editableHeaders);
+                    
+                    ResponseEntity<String> editableResponse = restTemplate.exchange(
+                        editableUrl,
+                        HttpMethod.POST,
+                        editableRequest,
+                        String.class
+                    );
+                    
+                    if (editableResponse.getStatusCode() == HttpStatus.OK && editableResponse.getBody() != null) {
+                        // Parse the response - expecting {"editable": [int, int, ...], "premium": [int, int, ...]}
+                        Map<String, Object> editableResponseBody = objectMapper.readValue(
+                            editableResponse.getBody(),
+                            objectMapper.getTypeFactory().constructMapType(Map.class, String.class, Object.class)
+                        );
+                        
+                        // Parse editable guilds
+                        Object editableObj = editableResponseBody.get("editable");
+                        if (editableObj instanceof java.util.List) {
+                            @SuppressWarnings("unchecked")
+                            java.util.List<Object> editableList = (java.util.List<Object>) editableObj;
+                            for (Object id : editableList) {
+                                // Store as string for comparison
+                                editableGuildIds.add(id.toString());
+                            }
+                        }
+                        
+                        // Parse premium guilds
+                        Object premiumObj = editableResponseBody.get("premium");
+                        if (premiumObj instanceof java.util.List) {
+                            @SuppressWarnings("unchecked")
+                            java.util.List<Object> premiumList = (java.util.List<Object>) premiumObj;
+                            for (Object id : premiumList) {
+                                // Store as string for comparison
+                                premiumGuildIds.add(id.toString());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Log but continue - we'll just show all as non-editable
+                    System.err.println("Failed to fetch editable guilds: " + e.getMessage());
+                }
+            }
+            
+            // Add editable and premium flags to each guild (compare as strings to preserve ID precision)
+            final java.util.Set<String> finalEditableGuildIds = editableGuildIds;
+            final java.util.Set<String> finalPremiumGuildIds = premiumGuildIds;
+            manageableGuilds.forEach(guild -> {
+                String guildId = guild.get("id").toString();
+                guild.put("editable", finalEditableGuildIds.contains(guildId));
+                guild.put("isPremium", finalPremiumGuildIds.contains(guildId));
+            });
+            
+            return ResponseEntity.ok(manageableGuilds);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

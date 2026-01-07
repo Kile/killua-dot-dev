@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Bot, LogOut, ChevronDown, Settings, Shield, Crown } from 'lucide-react';
+import { Bot, LogOut, ChevronDown, Settings, Shield, Crown, Server } from 'lucide-react';
 import { checkAdminStatus } from '../services/adminService';
 import { getPremiumTierInfo } from '../utils/premiumTiers';
 
@@ -96,8 +96,11 @@ const Navbar: React.FC = () => {
     { path: '/disclaimer', label: 'Disclaimer' }
   ];
 
+  // Hide navbar on mobile for explore simulator pages (not the landing page) to increase immersion
+  const isExploreSimulatorPage = location.pathname.startsWith('/explore/') && location.pathname !== '/explore';
+
   return (
-    <nav className="bg-discord-dark border-b border-gray-600 sticky top-0 z-50">
+    <nav className={`bg-discord-dark border-b border-gray-600 sticky top-0 z-50 ${isExploreSimulatorPage ? 'hidden sm:block' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
@@ -156,11 +159,21 @@ const Navbar: React.FC = () => {
                     className="flex items-center space-x-2 bg-discord-darker px-3 py-2 rounded-lg hover:bg-discord-dark transition-colors duration-200"
                   >
                     <div className="relative">
-                      <img
-                        src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
-                        alt={user.username}
-                        className={`w-6 h-6 rounded-full ${apiIsPremium ? 'ring-2 ring-yellow-400' : ''}`}
-                      />
+                      {apiIsPremium ? (
+                        <div className="premium-border-circle">
+                          <img
+                            src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
+                            alt={user.username}
+                            className="w-6 h-6 rounded-full premium-border-circle-inner"
+                          />
+                        </div>
+                      ) : (
+                        <img
+                          src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
+                          alt={user.username}
+                          className="w-6 h-6 rounded-full"
+                        />
+                      )}
                       {apiIsPremium && (
                         <div className="absolute -top-1 -right-1">
                           <Crown className="w-3 h-3 text-yellow-400" />
@@ -189,6 +202,14 @@ const Navbar: React.FC = () => {
                         >
                           <Settings className="h-4 w-4" />
                           <span>Account</span>
+                        </Link>
+                        <Link
+                          to="/servers"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-discord-darker transition-colors duration-200"
+                        >
+                          <Server className="h-4 w-4" />
+                          <span>Servers</span>
                         </Link>
                         {isAdmin && (
                           <>

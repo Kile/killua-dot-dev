@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import type { DiscordUser, AuthContextType } from '../types/auth';
+import type { DiscordUser, DiscordGuild, AuthContextType } from '../types/auth';
 import { useLocation } from 'react-router-dom';
+import { fetchUserGuilds } from '../services/guildService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -17,6 +18,9 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Cache TTL: 5 minutes
+const GUILDS_CACHE_TTL = 5 * 60 * 1000;
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<DiscordUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +28,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const hasCheckedSession = useRef(false);
   const isCheckingSession = useRef(false);
   const location = useLocation();
+  
+  // Guilds cache state
+  const [guilds, setGuilds] = useState<DiscordGuild[] | null>(null);
+  const [guildsLoading, setGuildsLoading] = useState(false);
+  const guildsCacheTime = useRef<number>(0);
+  const guildsFetchPromise = useRef<Promise<DiscordGuild[]> | null>(null);
 
   const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
   const REDIRECT_URI = `${window.location.origin}/auth/callback`;
@@ -91,30 +101,83 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = () => {
     setIsLoggingIn(true);
-    const scope = 'identify email';
+    const scope = 'identify email guilds';
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${scope}`;
     window.location.href = authUrl;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('discord_token');
-    localStorage.removeItem('discord_user');
-  };
 
   const getToken = () => {
     return localStorage.getItem('discord_token');
   };
 
+  const clearGuildsCache = useCallback(() => {
+    setGuilds(null);
+    guildsCacheTime.current = 0;
+    guildsFetchPromise.current = null;
+  }, []);
+
+  const fetchGuilds = useCallback(async (): Promise<DiscordGuild[]> => {
+    const token = getToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // Check if cache is still valid
+    const now = Date.now();
+    if (guilds && (now - guildsCacheTime.current) < GUILDS_CACHE_TTL) {
+      return guilds;
+    }
+
+    // If there's already a fetch in progress, return that promise
+    // This prevents duplicate requests when multiple components mount at once
+    if (guildsFetchPromise.current) {
+      return guildsFetchPromise.current;
+    }
+
+    // Start new fetch
+    setGuildsLoading(true);
+    
+    const fetchPromise = fetchUserGuilds(token)
+      .then((fetchedGuilds) => {
+        setGuilds(fetchedGuilds);
+        guildsCacheTime.current = Date.now();
+        guildsFetchPromise.current = null;
+        setGuildsLoading(false);
+        return fetchedGuilds;
+      })
+      .catch((error) => {
+        guildsFetchPromise.current = null;
+        setGuildsLoading(false);
+        throw error;
+      });
+
+    guildsFetchPromise.current = fetchPromise;
+    return fetchPromise;
+  }, [guilds]);
+
+  // Clear guilds cache on logout
+  const logoutWithClear = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem('discord_token');
+    localStorage.removeItem('discord_user');
+    clearGuildsCache();
+  }, [clearGuildsCache]);
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     login,
-    logout,
+    logout: logoutWithClear,
     setUser,
     setIsLoggingIn,
     loading,
-    getToken
+    getToken,
+    // Guilds cache
+    guilds,
+    guildsLoading,
+    fetchGuilds,
+    clearGuildsCache
   };
 
   return (

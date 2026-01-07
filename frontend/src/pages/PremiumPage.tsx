@@ -14,6 +14,7 @@ interface PremiumTier {
   headerBg: string; // simple solid background class
   fallbackIcon: React.ComponentType<any>;
   iconAsset?: string; // optional custom icon asset under /public/badges
+  shimmerBorder: string; // CSS class for shimmer border effect
 }
 
 const PremiumPage: React.FC = () => {
@@ -63,7 +64,8 @@ const PremiumPage: React.FC = () => {
       ],
       headerBg: 'bg-amber-600', // bronze
       fallbackIcon: Heart,
-      iconAsset: 'tier_1.png'
+      iconAsset: 'tier_1.png',
+      shimmerBorder: 'tier-border-bronze'
     },
     {
       id: '6002630',
@@ -78,7 +80,8 @@ const PremiumPage: React.FC = () => {
       popular: true,
       headerBg: 'bg-gray-400', // silver
       fallbackIcon: Star,
-      iconAsset: 'tier_2.png'
+      iconAsset: 'tier_2.png',
+      shimmerBorder: 'tier-border-silver'
     },
     {
       id: '6002631',
@@ -92,7 +95,8 @@ const PremiumPage: React.FC = () => {
       ],
       headerBg: 'bg-yellow-500', // gold
       fallbackIcon: Crown,
-      iconAsset: 'tier_3.png'
+      iconAsset: 'tier_3.png',
+      shimmerBorder: 'tier-border-gold'
     }
   ];
 
@@ -102,8 +106,10 @@ const PremiumPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-20">
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <Crown className="h-10 w-10 text-white" />
+            <div className="premium-border-lg">
+              <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <Crown className="h-10 w-10 text-white" />
+              </div>
             </div>
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
@@ -123,38 +129,35 @@ const PremiumPage: React.FC = () => {
             return (
               <div
                 key={index}
-                className={`relative bg-discord-dark border-2 rounded-2xl overflow-hidden transition-all duration-300 hover:transform hover:scale-105 flex flex-col h-full ${
-                  tier.popular 
-                    ? 'border-discord-blurple shadow-2xl shadow-discord-blurple/20' 
-                    : 'border-gray-600'
-                }`}
+                className={`${tier.shimmerBorder} transition-all duration-300 hover:transform hover:scale-105`}
               >
-                {/* Popular Badge */}
-                {tier.popular && (
-                  <div className="absolute top-0 right-0 bg-discord-blurple text-white px-4 py-2 rounded-bl-lg font-semibold text-sm">
-                    Most Popular
-                  </div>
-                )}
-                
-                {/* Current Plan Badge */}
-                {isCurrent && (
-                  <div className="absolute top-0 left-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-br-lg font-semibold text-sm flex items-center space-x-1">
-                    <CheckCircle className="h-3 w-3" />
-                    <span>Current Plan</span>
-                  </div>
-                )}
-
-                {/* Header */}
-                <div className={`${tier.headerBg} p-8 text-center`}>
-                  <div className="flex justify-center mb-4">
-                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
-                      {tier.iconAsset ? (
-                        <img src={`/badges/${tier.iconAsset}`} alt={tier.name} className="w-20 h-20 object-contain" />
-                      ) : (
-                        <Icon className="h-16 w-16 text-white" />
-                      )}
+                <div className="tier-border-inner relative flex flex-col h-full">
+                  {/* Popular Badge */}
+                  {tier.popular && (
+                    <div className="absolute top-0 right-0 bg-discord-blurple text-white px-4 py-2 rounded-bl-lg font-semibold text-sm z-10">
+                      Most Popular
                     </div>
-                  </div>
+                  )}
+                  
+                  {/* Current Plan Badge */}
+                  {isCurrent && (
+                    <div className="absolute top-0 left-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-br-lg font-semibold text-sm flex items-center space-x-1 z-10">
+                      <CheckCircle className="h-3 w-3" />
+                      <span>Current Plan</span>
+                    </div>
+                  )}
+
+                  {/* Header */}
+                  <div className={`${tier.headerBg} p-8 text-center rounded-t-[calc(1rem-2px)]`}>
+                    <div className="flex justify-center mb-4">
+                      <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                        {tier.iconAsset ? (
+                          <img src={`/badges/${tier.iconAsset}`} alt={tier.name} className="w-20 h-20 object-contain" />
+                        ) : (
+                          <Icon className="h-16 w-16 text-white" />
+                        )}
+                      </div>
+                    </div>
                   <h3 className="text-2xl font-bold text-white mb-2">{tier.name}</h3>
                   <div className="text-4xl font-bold text-white mb-2">{tier.price}</div>
                   <p className="text-white/90 text-sm">{tier.description}</p>
@@ -181,6 +184,7 @@ const PremiumPage: React.FC = () => {
                     <ExternalLink className="h-5 w-5" />
                     Get {tier.name}
                   </LinkButton>
+                </div>
                 </div>
               </div>
             );
