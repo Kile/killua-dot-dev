@@ -22,6 +22,7 @@ export interface DiscordGuild {
   features: string[];
   editable: boolean;
   isPremium: boolean;
+  member_count?: number;
 }
 
 export interface AuthContextType {

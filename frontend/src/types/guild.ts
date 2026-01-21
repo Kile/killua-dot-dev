@@ -13,11 +13,14 @@ export interface GuildTag {
 }
 
 export interface GuildInfo {
-  member_count: number;
+  name?: string;
+  icon_url?: string | null;
+  approximate_member_count?: number | null;
   prefix: string;
   is_premium: boolean;
   bot_added_on: string | null;
   tags: GuildTag[];
+  badges: string[];
 }
 
 export interface TagCreatePayload {

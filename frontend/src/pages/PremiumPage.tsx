@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Crown, Star, Zap, Heart, Check, ExternalLink, CheckCircle } from 'lucide-react';
 import LinkButton from '../components/LinkButton';
 import { useAuth } from '../contexts/AuthContext';
-// import { getPremiumTierInfo } from '../utils/premiumTiers';
+import PageTitle from '../components/PageTitle';
+import FloatingWizardButton from '../components/FloatingWizardButton';
 
 interface PremiumTier {
   id: string; // Patreon tier id
@@ -102,6 +103,7 @@ const PremiumPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white py-20 px-4">
+      <PageTitle title="Premium" description="Unlock exclusive features and support Killua by choosing a premium tier." />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-20">

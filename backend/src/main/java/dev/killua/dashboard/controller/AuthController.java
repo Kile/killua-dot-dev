@@ -341,7 +341,7 @@ public class AuthController {
                 }
             }
             
-            // Add editable and premium flags to each guild (compare as strings to preserve ID precision)
+            // Add editable, premium, and member count to each guild (compare as strings to preserve ID precision)
             final java.util.Set<String> finalEditableGuildIds = editableGuildIds;
             final java.util.Set<String> finalPremiumGuildIds = premiumGuildIds;
             manageableGuilds.forEach(guild -> {

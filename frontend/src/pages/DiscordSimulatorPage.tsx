@@ -5,6 +5,7 @@ import LinkButton from '../components/LinkButton';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { useAuth } from '../contexts/AuthContext';
 import { botCategories } from '../utils/exploreCategories';
+import PageTitle from '../components/PageTitle';
 
 // Discord avatar colors for randomization (matching reviews section)
 const AVATAR_COLORS = [
@@ -1085,8 +1086,17 @@ const DiscordSimulatorPage: React.FC = () => {
   // Helper to evaluate text content (string or lambda)
   const evaluateText = useCallback((content: string | ((state: SharedState) => string) | undefined): string | undefined => {
     if (!content) return undefined;
-    if (typeof content === 'string') return content;
-    return content(sharedStateRef.current);
+    let text = typeof content === 'string' ? content : content(sharedStateRef.current);
+    // Replace {user} with state.user
+    if (sharedStateRef.current.user) {
+      text = text.replace(/{user}/g, sharedStateRef.current.user);
+    }
+    return text;
+  }, []);
+
+  // Helper to strip brackets from @[text] mentions for typing
+  const stripMentionBrackets = useCallback((text: string): string => {
+    return text.replace(/@\[([^\]]+)\]/g, '@$1');
   }, []);
 
   // Helper to create LambdaHelpers
@@ -3397,10 +3407,9 @@ const DiscordSimulatorPage: React.FC = () => {
           // Check if this is a user message that should be typed out
           const isUserMessage = msg.author?.isUser === true;
           if (isUserMessage && msg.content) {
-            // Evaluate content to get the actual text
-            const messageContent = typeof msg.content === 'string' 
-              ? msg.content 
-              : msg.content(sharedStateRef.current);
+            // Evaluate content and strip brackets for typing
+            const rawContent = evaluateText(msg.content) || '';
+            const messageContent = stripMentionBrackets(rawContent);
             
             // Calculate typing duration (30ms per character + 300ms delay)
             const typingDuration = messageContent.length * 30 + 300;
@@ -3494,6 +3503,8 @@ const DiscordSimulatorPage: React.FC = () => {
   // Type out command character by character
   const typeCommand = useCallback((command: string) => {
     let i = 0;
+    // replace mention formatting if present
+    command = command.replace(/@\[[^\]]+\]/g, (match) => `@${match.slice(2, -1)}`);
     const interval = setInterval(() => {
       if (i < command.length) {
         setCommandText(command.substring(0, i + 1));
@@ -3533,10 +3544,9 @@ const DiscordSimulatorPage: React.FC = () => {
           currentMessageIndexRef.current = nextSlashIndex;
           setProcessedMessageCount(nextSlashIndex);
           
-          // Evaluate command if it's a function
-          const evaluatedCommand = typeof slashCmd.command === 'function' 
-            ? slashCmd.command(sharedStateRef.current)
-            : slashCmd.command;
+          // Evaluate command and strip brackets
+          const rawCommand = evaluateText(slashCmd.command) || '';
+          const evaluatedCommand = stripMentionBrackets(rawCommand);
           
           // If commandUser is specified, auto-send the command
           if (slashCmd.commandUser) {
@@ -3581,10 +3591,9 @@ const DiscordSimulatorPage: React.FC = () => {
       currentMessageIndexRef.current = nextSlashIndex;
       setProcessedMessageCount(nextSlashIndex);
       
-      // Evaluate command if it's a function
-      const evaluatedCommand = typeof slashCmd.command === 'function' 
-        ? slashCmd.command(sharedStateRef.current)
-        : slashCmd.command;
+      // Evaluate command and strip brackets
+      const rawCommand = evaluateText(slashCmd.command) || '';
+      const evaluatedCommand = stripMentionBrackets(rawCommand);
       
       if (slashCmd.commandUser) {
       setCommandUsers(prev => {
@@ -3735,6 +3744,10 @@ const DiscordSimulatorPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white">
+      <PageTitle 
+        title={category ? `${category.title.replace(/^\.\.\.\s*/, '')} Demo` : 'Simulator'} 
+        description={`Experience Killua's ${category?.title || 'features'} in our interactive Discord simulator.`} 
+      />
       <style>{`
         @keyframes shrink {
           from {

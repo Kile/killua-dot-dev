@@ -23,6 +23,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -115,7 +116,10 @@ class GuildControllerTest {
         Mockito.when(discordTokenService.getDiscordToken(eq(JWT_TOKEN))).thenReturn(DISCORD_TOKEN);
 
         String guildInfoJson = objectMapper.writeValueAsString(Map.of(
-            "member_count", 150,
+            "badges", List.of("early_supporter", "developer"),
+            "approximate_member_count", 150,
+            "name", "Test Guild",
+            "icon_url", "https://cdn.discordapp.com/icons/123/icon.png",
             "prefix", "!",
             "is_premium", true,
             "bot_added_on", "2024-01-01T00:00:00Z",
@@ -144,7 +148,7 @@ class GuildControllerTest {
         mockMvc.perform(get("/api/guild/" + GUILD_ID + "/info")
                 .header("Authorization", "Bearer " + JWT_TOKEN))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.member_count", is(150)))
+            .andExpect(jsonPath("$.badges", hasSize(2)))
             .andExpect(jsonPath("$.prefix", is("!")))
             .andExpect(jsonPath("$.is_premium", is(true)))
             .andExpect(jsonPath("$.tags", hasSize(1)))
@@ -541,6 +545,146 @@ class GuildControllerTest {
                 .content(objectMapper.writeValueAsString(Map.of("name", "test", "content", "content"))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error", containsString("Token expired")));
+    }
+
+    // ==================== GET /{guildId}/command-usage Tests ====================
+
+    @Test
+    @DisplayName("GET /api/guild/{id}/command-usage - missing header returns 400")
+    void getCommandUsage_missingHeader_returnsBadRequest() throws Exception {
+        String fromIso = Instant.ofEpochSecond(1000000000L).toString();
+        String toIso = Instant.ofEpochSecond(2000000000L).toString();
+        mockMvc.perform(get("/api/guild/" + GUILD_ID + "/command-usage")
+                .param("from", fromIso)
+                .param("to", toIso)
+                .param("interval", "1d"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/guild/{id}/command-usage - invalid header returns 400")
+    void getCommandUsage_invalidHeader_returnsBadRequest() throws Exception {
+        String fromIso = Instant.ofEpochSecond(1000000000L).toString();
+        String toIso = Instant.ofEpochSecond(2000000000L).toString();
+        mockMvc.perform(get("/api/guild/" + GUILD_ID + "/command-usage")
+                .header("Authorization", "InvalidToken")
+                .param("from", fromIso)
+                .param("to", toIso)
+                .param("interval", "1d"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error", containsString("Invalid authorization header")));
+    }
+
+    @Test
+    @DisplayName("GET /api/guild/{id}/command-usage - discord token not found returns 404")
+    void getCommandUsage_discordTokenNotFound_returns404() throws Exception {
+        Mockito.when(authService.verifyToken(eq(JWT_TOKEN))).thenReturn(buildUser());
+        Mockito.when(discordTokenService.getDiscordToken(eq(JWT_TOKEN))).thenReturn(null);
+
+        String fromIso = Instant.ofEpochSecond(1000000000L).toString();
+        String toIso = Instant.ofEpochSecond(2000000000L).toString();
+        mockMvc.perform(get("/api/guild/" + GUILD_ID + "/command-usage")
+                .header("Authorization", "Bearer " + JWT_TOKEN)
+                .param("from", fromIso)
+                .param("to", toIso)
+                .param("interval", "1d"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error", containsString("Discord token not found")));
+    }
+
+    @Test
+    @DisplayName("GET /api/guild/{id}/command-usage - success returns command usage data")
+    void getCommandUsage_success() throws Exception {
+        Mockito.when(authService.verifyToken(eq(JWT_TOKEN))).thenReturn(buildUser());
+        Mockito.when(discordTokenService.getDiscordToken(eq(JWT_TOKEN))).thenReturn(DISCORD_TOKEN);
+
+        // External API returns timestamps as strings
+        String commandUsageJson = objectMapper.writeValueAsString(List.of(
+            Map.of(
+                "name", "help",
+                "group", "general",
+                "command_id", 1,
+                "values", List.of(
+                    List.of("1000000000", 5),
+                    List.of("1000001000", 3)
+                )
+            ),
+            Map.of(
+                "name", "ping",
+                "group", "general",
+                "command_id", 2,
+                "values", List.of(
+                    List.of("1000000000", 10),
+                    List.of("1000001000", 8)
+                )
+            )
+        ));
+
+        Mockito.when(restTemplate.exchange(
+            contains("/guild/" + GUILD_ID + "/command-usage"),
+            eq(HttpMethod.GET),
+            org.mockito.ArgumentMatchers.<HttpEntity<?>>any(),
+            eq(String.class)
+        )).thenReturn(new ResponseEntity<>(commandUsageJson, HttpStatus.OK));
+
+        String fromIso = Instant.ofEpochSecond(1000000000L).toString();
+        String toIso = Instant.ofEpochSecond(2000000000L).toString();
+        mockMvc.perform(get("/api/guild/" + GUILD_ID + "/command-usage")
+                .header("Authorization", "Bearer " + JWT_TOKEN)
+                .param("from", fromIso)
+                .param("to", toIso)
+                .param("interval", "1d"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$[0].name", is("help")))
+            .andExpect(jsonPath("$[0].group", is("general")))
+            .andExpect(jsonPath("$[0].command_id", is(1)))
+            .andExpect(jsonPath("$[0].values[0][0]", is(Instant.ofEpochSecond(1000000000L).toString()))) // Converted to ISO
+            .andExpect(jsonPath("$[1].name", is("ping")))
+            .andExpect(jsonPath("$[1].command_id", is(2)));
+    }
+
+    @Test
+    @DisplayName("GET /api/guild/{id}/command-usage - external API error returns error")
+    void getCommandUsage_externalApiError_returnsError() throws Exception {
+        Mockito.when(authService.verifyToken(eq(JWT_TOKEN))).thenReturn(buildUser());
+        Mockito.when(discordTokenService.getDiscordToken(eq(JWT_TOKEN))).thenReturn(DISCORD_TOKEN);
+
+        String errorJson = objectMapper.writeValueAsString(Map.of("error", "Invalid time range"));
+
+        Mockito.when(restTemplate.exchange(
+            contains("/guild/" + GUILD_ID + "/command-usage"),
+            eq(HttpMethod.GET),
+            org.mockito.ArgumentMatchers.<HttpEntity<?>>any(),
+            eq(String.class)
+        )).thenReturn(new ResponseEntity<>(errorJson, HttpStatus.BAD_REQUEST));
+
+        String fromIso = Instant.ofEpochSecond(2000000000L).toString();
+        String toIso = Instant.ofEpochSecond(1000000000L).toString();
+        mockMvc.perform(get("/api/guild/" + GUILD_ID + "/command-usage")
+                .header("Authorization", "Bearer " + JWT_TOKEN)
+                .param("from", fromIso)
+                .param("to", toIso)
+                .param("interval", "1d"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error", is("Invalid time range")));
+    }
+
+    @Test
+    @DisplayName("GET /api/guild/{id}/command-usage - token verification failure returns 400")
+    void getCommandUsage_tokenVerificationFails_returnsBadRequest() throws Exception {
+        Mockito.when(authService.verifyToken(eq(JWT_TOKEN)))
+            .thenThrow(new RuntimeException("Invalid token"));
+
+        String fromIso = Instant.ofEpochSecond(1000000000L).toString();
+        String toIso = Instant.ofEpochSecond(2000000000L).toString();
+        mockMvc.perform(get("/api/guild/" + GUILD_ID + "/command-usage")
+                .header("Authorization", "Bearer " + JWT_TOKEN)
+                .param("from", fromIso)
+                .param("to", toIso)
+                .param("interval", "1d"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error", containsString("Invalid token")));
     }
 }
 

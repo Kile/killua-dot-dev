@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.List;
+import java.time.Instant;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
@@ -333,6 +335,112 @@ public class GuildController {
             }
             
             return ResponseEntity.ok(responseBody);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/{guildId}/command-usage")
+    public ResponseEntity<?> getCommandUsage(@RequestHeader("Authorization") String authHeader,
+                                              @PathVariable String guildId,
+                                              @RequestParam("from") String fromStr,
+                                              @RequestParam("to") String toStr,
+                                              @RequestParam("interval") String interval) {
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
+        }
+        
+        try {
+            // Verify the JWT token first
+            authService.verifyToken(jwtToken);
+            
+            // Get the Discord token from the service
+            String discordToken = discordTokenService.getDiscordToken(jwtToken);
+            
+            if (discordToken == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Discord token not found"));
+            }
+            
+            // Convert ISO strings to timestamps (seconds)
+            Instant fromInstant = Instant.parse(fromStr);
+            Instant toInstant = Instant.parse(toStr);
+            long fromTimestamp = fromInstant.getEpochSecond();
+            long toTimestamp = toInstant.getEpochSecond();
+            
+            // Validate that timestamps are different
+            if (fromTimestamp == toTimestamp) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "From and to timestamps cannot be the same",
+                    "from_iso", fromStr,
+                    "to_iso", toStr,
+                    "from_timestamp", fromTimestamp,
+                    "to_timestamp", toTimestamp
+                ));
+            }
+            
+            // Build URL with query parameters (send timestamps as strings to preserve precision)
+            // Use String.valueOf to ensure proper conversion
+            String apiUrl = externalApiBaseUrl + "/guild/" + guildId + "/command-usage" +
+                    "?from=" + fromTimestamp +
+                    "&to=" + toTimestamp +
+                    "&interval=" + interval;
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(discordToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            HttpEntity<String> request = new HttpEntity<>(headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl,
+                HttpMethod.GET,
+                request,
+                String.class
+            );
+            
+            if (response.getStatusCode() != HttpStatus.OK) {
+                // Try to parse error response
+                try {
+                    Map<String, Object> errorBody = objectMapper.readValue(response.getBody(), Map.class);
+                    return ResponseEntity.status(response.getStatusCode())
+                        .body(errorBody);
+                } catch (Exception e) {
+                    return ResponseEntity.status(response.getStatusCode())
+                        .body(Map.of("error", "Failed to fetch command usage"));
+                }
+            }
+            
+            // Parse response and convert timestamp strings back to ISO strings
+            Object responseData = objectMapper.readValue(response.getBody(), Object.class);
+            
+            // Convert timestamps in response to ISO strings
+            if (responseData instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> items = (List<Map<String, Object>>) responseData;
+                for (Map<String, Object> item : items) {
+                    Object valuesObj = item.get("values");
+                    if (valuesObj instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<List<Object>> values = (List<List<Object>>) valuesObj;
+                        for (List<Object> valuePair : values) {
+                            if (valuePair.size() >= 2 && valuePair.get(0) instanceof String) {
+                                // Convert timestamp string to ISO string
+                                String timestampStr = (String) valuePair.get(0);
+                                try {
+                                    long timestamp = Long.parseLong(timestampStr);
+                                    Instant instant = Instant.ofEpochSecond(timestamp);
+                                    valuePair.set(0, instant.toString()); // ISO-8601 format
+                                } catch (NumberFormatException e) {
+                                    // If it's already an ISO string or invalid, leave it as is
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return ResponseEntity.ok(responseData);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

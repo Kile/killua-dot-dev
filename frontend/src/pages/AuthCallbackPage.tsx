@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import PageTitle from '../components/PageTitle';
 
 const AuthCallbackPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -91,6 +92,7 @@ const AuthCallbackPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker flex items-center justify-center">
+      <PageTitle title="Authenticating" />
       <div className="bg-discord-dark p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
         {status === 'loading' && (
           <div className="text-center">

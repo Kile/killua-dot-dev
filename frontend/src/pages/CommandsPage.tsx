@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import commandEmojiMap from '../utils/commandEmojiMap';
 import Loading from '../components/Loading';
+import PageTitle from '../components/PageTitle';
+import FloatingWizardButton from '../components/FloatingWizardButton';
 
 interface Command {
   name: string;
@@ -128,6 +130,8 @@ const CommandsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white p-8">
+      <PageTitle title="Commands" description="Explore over 100 advance Discord commands for fun, moderation, and utility." />
+      <FloatingWizardButton alwaysVisible={true} />
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-center">Commands</h1>
         

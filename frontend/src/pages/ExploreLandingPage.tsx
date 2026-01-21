@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Send } from 'lucide-react';
 import { botCategories } from '../utils/exploreCategories';
+import PageTitle from '../components/PageTitle';
+import FloatingWizardButton from '../components/FloatingWizardButton';
 
 const ExploreLandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -73,6 +75,7 @@ const ExploreLandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white">
+      <PageTitle title="Explore" description="Discover what Killua can help you with through our interactive wizard." />
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-12 sm:py-16">
         {/* Hero Question - Large and Centered */}

@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { Bot, Users, Server, Heart, Star, X, ChevronRight } from 'lucide-react';
 import LinkButton from '../components/LinkButton';
 import Loading from '../components/Loading';
+import FloatingWizardButton from '../components/FloatingWizardButton';
+import PageTitle from '../components/PageTitle';
+import WizardModal from '../components/WizardModal';
 import { botCategories } from '../utils/exploreCategories';
 
 interface Stats {
@@ -141,6 +144,8 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white">
+      <PageTitle description="Killua: The Discord bot that does it better. Explore features, commands, and manage your account." />
+      <FloatingWizardButton />
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -217,8 +222,10 @@ const LandingPage: React.FC = () => {
                 className="mt-8 text-gray-400 hover:text-white transition-colors duration-200 flex flex-col sm:flex-row items-center gap-2 mx-auto md:mx-0 group"
               >
                 <span className="text-sm">Not sure where to start?</span>
-                <span className="text-discord-blurple group-hover:underline text-sm font-medium text-center">Find out what Killua can do for you</span>
-                <ChevronRight className="w-4 h-4 text-discord-blurple" />
+                <div className="flex items-center gap-2">
+                  <span className="text-discord-blurple group-hover:underline text-sm font-medium text-center">Find out what Killua can do for you</span>
+                  <ChevronRight className="w-4 h-4 text-discord-blurple shrink-0" />
+                </div>
               </button>
             </div>
 
@@ -392,52 +399,7 @@ const LandingPage: React.FC = () => {
       </div>
 
       {/* Wizard Modal */}
-      {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setWizardOpen(false)}
-          />
-          
-          {/* Modal */}
-          <div className="relative bg-discord-dark border border-gray-600 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-600">
-              <h3 className="text-xl font-bold text-white">What can Killua help you with?</h3>
-              <button
-                onClick={() => setWizardOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
-              <p className="text-gray-400 mb-6 text-center">I'm looking for a bot that...</p>
-              <div className="space-y-3">
-                {botCategories.map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/explore/${category.id}`}
-                    onClick={() => setWizardOpen(false)}
-                    className="w-full flex items-center gap-4 p-4 bg-discord-darker hover:bg-discord-darker/80 border border-gray-700 hover:border-discord-blurple/50 rounded-xl transition-all duration-200 group"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-discord-blurple/20 flex items-center justify-center text-discord-blurple group-hover:bg-discord-blurple group-hover:text-white transition-colors">
-                      {category.icon}
-                    </div>
-                    <span className="text-left text-gray-200 group-hover:text-white transition-colors flex-1">
-                      {category.title}
-                    </span>
-                    <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-discord-blurple transition-colors" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <WizardModal isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
     </div>
   );
 };

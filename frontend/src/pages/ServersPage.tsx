@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { DiscordGuild } from '../types/auth';
 import { Server, Lock, Plus, Crown, Shield } from 'lucide-react';
+import PageTitle from '../components/PageTitle';
 
 const ServersPage: React.FC = () => {
   const { user, guilds: cachedGuilds, guildsLoading, fetchGuilds } = useAuth();
@@ -112,6 +113,7 @@ const ServersPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker">
+      <PageTitle title="My Servers" description="Manage Killua's settings across your Discord servers." />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">

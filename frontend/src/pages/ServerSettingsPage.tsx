@@ -5,8 +5,12 @@ import { fetchGuildInfo, updateGuildPrefix, createTag, editTag, deleteTag } from
 import type { DiscordGuild } from '../types/auth';
 import type { GuildInfo, GuildTag } from '../types/guild';
 import { ArrowLeft, BarChart3, Terminal, Settings, Tag, Search, ChevronDown, ChevronUp, Plus, Trash2, Edit3, UserPlus, X, Check, Users, Hash, SortAsc } from 'lucide-react';
+import Loading from '../components/Loading';
 import StyledSelect from '../components/StyledSelect';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import ServerStats from '../components/ServerStats';
+import BadgeIcon from '../components/BadgeIcon';
+import PageTitle from '../components/PageTitle';
 
 interface LocationState {
   guild?: DiscordGuild;
@@ -56,6 +60,12 @@ const ServerSettingsPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagContent, setNewTagContent] = useState('');
+  const [statsDownloadData, setStatsDownloadData] = useState<{
+    from: string;
+    to: string;
+    interval: string;
+    data: any[];
+  } | null>(null);
 
   const loadGuildData = async () => {
     if (!user || !serverId) return;
@@ -127,6 +137,30 @@ const ServerSettingsPage: React.FC = () => {
       .join('')
       .substring(0, 2)
       .toUpperCase();
+  };
+
+  const handleDownloadData = () => {
+    const exportTags = (guildInfo?.tags || []).map(tag => ({
+      ...tag,
+      owner_id: tag.owner?.user_id ?? null,
+      owner: undefined,
+    }));
+    const payload = {
+      prefix: guildInfo?.prefix ?? null,
+      approximate_member_count: guildInfo?.approximate_member_count ?? null,
+      tags: exportTags,
+      badges: guildInfo?.badges ?? [],
+      commandStats: statsDownloadData ?? null,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `server-stats-${serverId}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   const handlePrefixUpdate = async () => {
@@ -333,7 +367,7 @@ const ServerSettingsPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-discord-darker flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-discord-blurple mx-auto mb-4"></div>
+          <Loading size="md" className="mx-auto mb-4" />
           <p className="text-gray-400">Loading server settings...</p>
         </div>
       </div>
@@ -359,6 +393,7 @@ const ServerSettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker">
+      <PageTitle title={guild?.name || 'Server Settings'} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
@@ -371,7 +406,8 @@ const ServerSettingsPage: React.FC = () => {
 
         {/* Server Header */}
         <div className="bg-discord-dark rounded-xl p-6 mb-6 border border-gray-700">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center space-x-4">
             {/* Server Icon */}
             {getGuildIconUrl(guild) ? (
               <img
@@ -405,13 +441,35 @@ const ServerSettingsPage: React.FC = () => {
                     Premium
                   </span>
                 )}
-                {guildInfo && (
+                {guildInfo?.approximate_member_count !== undefined && guildInfo?.approximate_member_count !== null ? (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-600/50 text-gray-300">
                     <Users className="w-3 h-3 mr-1" />
-                    {guildInfo.member_count.toLocaleString()} members
+                    {guildInfo.approximate_member_count.toLocaleString()} members
+                  </span>
+                ) : guild?.member_count !== undefined && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-600/50 text-gray-300">
+                    <Users className="w-3 h-3 mr-1" />
+                    {guild.member_count.toLocaleString()} members
                   </span>
                 )}
               </div>
+              {guildInfo?.badges && guildInfo.badges.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {guildInfo.badges.map((badge) => (
+                    <BadgeIcon key={badge} badgeName={badge} className="w-4 h-4" />
+                  ))}
+                </div>
+              )}
+            </div>
+            </div>
+            <div className="flex w-full md:w-auto items-start md:items-center justify-start md:justify-end">
+              <button
+                type="button"
+                onClick={handleDownloadData}
+                className="w-full md:w-auto bg-discord-blurple hover:bg-discord-blurple/90 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Download Data
+              </button>
             </div>
           </div>
         </div>
@@ -453,14 +511,14 @@ const ServerSettingsPage: React.FC = () => {
         <div className="bg-discord-dark rounded-xl p-6 border border-gray-700">
           {activeTab === 'stats' && (
             <div>
-              <h2 className="text-xl font-semibold text-white mb-4">Server Statistics</h2>
-              <div className="bg-discord-darker rounded-lg p-8 text-center border border-gray-600 border-dashed">
-                <BarChart3 className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-400 text-lg mb-2">Statistics Coming Soon</p>
-                <p className="text-gray-500 text-sm">
-                  Server statistics and analytics will be displayed here in a future update.
-                </p>
-              </div>
+              <h2 className="text-xl font-semibold text-white mb-6">Server Statistics</h2>
+              {serverId && user && (
+                <ServerStats
+                  jwtToken={getToken() || ''}
+                  guildId={serverId}
+                  onStatsDataChange={setStatsDownloadData}
+                />
+              )}
             </div>
           )}
 

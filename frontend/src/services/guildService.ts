@@ -119,3 +119,44 @@ export const fetchGuildSettings = async (jwtToken: string, guildId: string): Pro
 export const updateGuildPrefix = async (jwtToken: string, guildId: string, prefix: string): Promise<void> => {
   await updateGuildSettings(jwtToken, guildId, { prefix });
 };
+
+// Command usage types
+export interface CommandUsageItem {
+  name: string;
+  group: string;
+  command_id: number;
+  values: Array<[string, number]>; // [ISO date string, count]
+}
+
+export type CommandUsageResponse = 
+  | { error: string }
+  | CommandUsageItem[];
+
+export const fetchCommandUsage = async (
+  jwtToken: string,
+  guildId: string,
+  from: string, // ISO date string
+  to: string,   // ISO date string
+  interval: string
+): Promise<CommandUsageResponse> => {
+  const params = new URLSearchParams({
+    from: from,
+    to: to,
+    interval: interval,
+  });
+
+  const response = await fetch(`/api/guild/${guildId}/command-usage?${params.toString()}`, {
+    headers: {
+      'Authorization': `Bearer ${jwtToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    return { error: data.error || `Failed to fetch command usage: ${response.status}` };
+  }
+
+  return data;
+};

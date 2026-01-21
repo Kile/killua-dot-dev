@@ -1,3 +1,4 @@
+import React from 'react';
 import { Sparkles, Zap, ClipboardList, ImageIcon, MessageCircle, Gamepad2 } from 'lucide-react';
 
 export interface BotCategory {
