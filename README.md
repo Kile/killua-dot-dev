@@ -20,6 +20,8 @@ A modern Discord bot dashboard built with React frontend and Java Spring Boot ba
 - **Premium Page**: Three-tier subscription system with perks
 - **Team Page**: Team member profiles with images and descriptions
 - **Commands Page**: Searchable command documentation with collapsible groups
+- **Explore Page**: Interactive wizard for discovering bot features
+- **Simulator Page**: Discord simulator with interactive scenarios and demos
 - **News Page**: Public news feed with detailed articles and updates
 - **News Detail Page**: Individual news articles with full content and metadata
 
@@ -29,6 +31,8 @@ A modern Discord bot dashboard built with React frontend and Java Spring Boot ba
 - **User Settings**: Manage action settings, email notifications, and voting reminders
 - **User Statistics**: Comprehensive stats including achievements, badges, game stats, and voting streaks
 - **Premium Management**: View and manage premium subscriptions
+- **Servers Page**: Manage guilds the user has access to
+- **Server Settings**: Per-guild settings, stats, tags, and command usage insights
 
 ### Admin Features
 - **Admin Panel**: Comprehensive admin dashboard with multiple management tools
