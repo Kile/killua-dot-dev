@@ -5,7 +5,7 @@ x-common-labels: &common-labels
     org.opencontainers.image.source: https://github.com/kile/killua-dot-dev
     org.opencontainers.image.title: "Killua Website"
     org.opencontainers.image.description: "The Killua Discord bot website"
-    org.opencontainers.image.version: "1.0.0"
+    org.opencontainers.image.version: "1.1.0"
     org.opencontainers.image.authors: "kile@killua.dev"
 
 services:
