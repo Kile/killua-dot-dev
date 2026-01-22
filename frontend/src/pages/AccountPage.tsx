@@ -96,10 +96,11 @@ const AccountPage: React.FC = () => {
     <>
       <PageTitle title="Account" description="Manage your Killua account settings and view your profile." />
       <UserAccountView 
-      userInfo={userDataForView}
-      isAdmin={false}
-      onSettingsUpdate={loadUserInfo}
-    />
+        userInfo={userDataForView}
+        isAdmin={false}
+        onSettingsUpdate={loadUserInfo}
+      />
+    </>
   );
 };
 
