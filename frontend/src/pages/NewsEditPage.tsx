@@ -14,6 +14,7 @@ import UpdateProgression from '../components/UpdateProgression';
 import TagInput from '../components/TagInput';
 import CdnFileSelector from '../components/CdnFileSelector';
 import { getDefaultPlaceholderUrl, getDefaultPlaceholderAlt } from '../utils/imageUtils';
+import PageTitle from '../components/PageTitle';
 
 const NewsEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -368,6 +369,7 @@ const NewsEditPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white py-8">
+      <PageTitle title={isEdit ? `Edit News` : 'Create News'} />
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-6">
           <button

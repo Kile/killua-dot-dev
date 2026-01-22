@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Prism from 'prismjs';
+import twemoji from 'twemoji';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-javascript';
@@ -32,13 +33,25 @@ import './PrismTheme.css';
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  enableEmoji?: boolean; // Enable Twemoji parsing
 }
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className = "" }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className = "", enableEmoji = false }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     // Re-highlight code blocks after content changes
     Prism.highlightAll();
-  }, [content]);
+    
+    // Parse emojis with Twemoji if enabled
+    if (enableEmoji && containerRef.current) {
+      twemoji.parse(containerRef.current, {
+        folder: 'svg',
+        ext: '.svg',
+        base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/'
+      });
+    }
+  }, [content, enableEmoji]);
 
   const renderMarkdown = (text: string) => {
     const lines = text.split('\n');
@@ -134,6 +147,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
         continue;
       }
 
+      // Handle footer-style subheadings (-#)
+      if (trimmedLine.startsWith('-# ')) {
+        flushList();
+        flushCodeBlock();
+        elements.push(
+          <p key={`footer-${elements.length}`} className="text-gray-500 text-xs mt-3">
+            {renderInlineMarkdown(trimmedLine.substring(3))}
+          </p>
+        );
+        continue;
+      }
+
       // Handle list items (-, +, and *)
       if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('+ ') || trimmedLine.startsWith('* ')) {
         flushCodeBlock();
@@ -210,53 +235,62 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
 
   const renderBoldItalicUnderline = (text: string): React.ReactNode => {
     // Process from outermost to innermost - underline first, then bold, then italic, then code
-    return processFormatting(text, [
-      // Process underline first (outermost)
-      { 
-        pattern: /__([^_]+)__/g, 
-        render: (content: string) => (
-          <span key={`underline-${Math.random()}`} className="underline text-gray-300">
-            {processFormatting(content, [
-              { pattern: /\*\*([^*]+)\*\*/g, render: (c: string) => <strong key={`bold-${Math.random()}`} className="font-bold text-white">{c}</strong> },
-              { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
-              { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
-            ])}
-          </span>
-        )
-      },
-      // Process bold second
-      { 
-        pattern: /\*\*([^*]+)\*\*/g, 
-        render: (content: string) => (
-          <strong key={`bold-${Math.random()}`} className="font-bold text-white">
-            {processFormatting(content, [
-              { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
-              { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
-            ])}
-          </strong>
-        )
-      },
-      // Process italic third
-      { 
-        pattern: /\*([^*]+)\*/g, 
-        render: (content: string) => (
-          <em key={`italic-${Math.random()}`} className="italic text-gray-200">
-            {processFormatting(content, [
-              { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
-            ])}
-          </em>
-        )
-      },
-      // Process inline code last (innermost)
-      { 
-        pattern: /`([^`]+)`/g, 
-        render: (content: string) => (
-          <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">
-            {content}
-          </code>
-        )
+    // The key is that bold must be processed before italic, and we need to process ALL bold matches
+    // before moving to italic. We do this by processing bold patterns in a separate pass first.
+    
+    // First pass: replace all bold patterns
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    const boldRegex = /\*\*([^*]+)\*\*/g;
+    let match;
+    
+    // Reset regex lastIndex
+    boldRegex.lastIndex = 0;
+    
+    while ((match = boldRegex.exec(text)) !== null) {
+      // Add text before the bold match
+      if (match.index > lastIndex) {
+        const beforeText = text.slice(lastIndex, match.index);
+        parts.push(processFormatting(beforeText, [
+          { pattern: /__([^_]+)__/g, render: (c: string) => <span key={`underline-${Math.random()}`} className="underline text-gray-300">{c}</span> },
+          { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
+          { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
+        ]));
       }
-    ]);
+      
+      // Add the bold element
+      parts.push(
+        <strong key={`bold-${Math.random()}`} className="font-bold text-white">
+          {processFormatting(match[1], [
+            { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
+            { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
+          ])}
+        </strong>
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text after last bold match
+    if (lastIndex < text.length) {
+      const afterText = text.slice(lastIndex);
+      parts.push(processFormatting(afterText, [
+        { pattern: /__([^_]+)__/g, render: (c: string) => <span key={`underline-${Math.random()}`} className="underline text-gray-300">{c}</span> },
+        { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
+        { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
+      ]));
+    }
+    
+    // If no bold patterns were found, process normally
+    if (parts.length === 0) {
+      return processFormatting(text, [
+        { pattern: /__([^_]+)__/g, render: (c: string) => <span key={`underline-${Math.random()}`} className="underline text-gray-300">{c}</span> },
+        { pattern: /\*([^*]+)\*/g, render: (c: string) => <em key={`italic-${Math.random()}`} className="italic text-gray-200">{c}</em> },
+        { pattern: /`([^`]+)`/g, render: (c: string) => <code key={`code-${Math.random()}`} className="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-green-400">{c}</code> }
+      ]);
+    }
+    
+    return <>{parts}</>;
   };
 
   const processFormatting = (text: string, patterns: Array<{pattern: RegExp, render: (content: string) => React.ReactNode}>): React.ReactNode => {
@@ -279,7 +313,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
   };
 
   return (
-    <div className={`prose prose-lg max-w-none ${className}`}>
+    <div ref={containerRef} className={`prose prose-lg max-w-none twemoji-container ${className}`}>
       {renderMarkdown(content)}
     </div>
   );

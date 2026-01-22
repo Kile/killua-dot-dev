@@ -23,7 +23,6 @@ interface BadgeIconProps {
 }
 
 // Map badge keys to custom image filenames placed under /public/badges
-// Example: place rps_master.png in frontend/public/badges, then map 'rps_master': 'rps_master.png'
 const customIconMap: Record<string, string> = {
   'rps_master': 'rps_master.png',
   'developer': 'developer.png',
@@ -32,9 +31,11 @@ const customIconMap: Record<string, string> = {
   'pro_hugger': 'pro_hugger.png',
   'pro_hugged': 'pro_hugged.png',
   'full_book': 'full_book.png',
+  'partner': 'partner.png', 
   '6002629': 'tier_1.png',
   '6002630': 'tier_2.png',
   '6002631': 'tier_3.png',
+  'premium': 'premium_guild.png',
 };
 
 const BadgeIcon: React.FC<BadgeIconProps> = ({ badgeName, className = "w-6 h-6" }) => {
@@ -55,6 +56,7 @@ const BadgeIcon: React.FC<BadgeIconProps> = ({ badgeName, className = "w-6 h-6" 
       'time': Clock,
       'gift': Gift,
       'rare': Gem,
+      'partner': Crown,
       // Premium tiers
       '6002630': Crown, // Tier One
       '6002629': Star,  // Tier Two

@@ -11,6 +11,7 @@ import LinkIcon from '../components/LinkIcon';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import UpdateProgression from '../components/UpdateProgression';
 import SmartImageLayout from '../components/SmartImageLayout';
+import PageTitle from '../components/PageTitle';
 
 const NewsDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -204,6 +205,7 @@ const NewsDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white py-8">
+      <PageTitle title={news?.title || 'News'} description={news?.description} />
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-6">
           <div className="flex justify-between items-start">

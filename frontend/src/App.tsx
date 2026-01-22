@@ -12,6 +12,10 @@ import AdminPanel from './pages/AdminPanel';
 import NewsPage from './pages/NewsPage';
 import NewsDetailPage from './pages/NewsDetailPage';
 import NewsEditPage from './pages/NewsEditPage';
+import ServersPage from './pages/ServersPage';
+import ServerSettingsPage from './pages/ServerSettingsPage';
+import DiscordSimulatorPage from './pages/DiscordSimulatorPage';
+import ExploreLandingPage from './pages/ExploreLandingPage';
 
 function App() {
   return (
@@ -33,6 +37,10 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/servers" element={<ServersPage />} />
+              <Route path="/servers/:serverId" element={<ServerSettingsPage />} />
+              <Route path="/explore" element={<ExploreLandingPage />} />
+              <Route path="/explore/:categoryId" element={<DiscordSimulatorPage />} />
             </Routes>
           </main>
         </div>

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Github, ExternalLink, Users, Code, Palette, Globe } from 'lucide-react';
+import PageTitle from '../components/PageTitle';
+import FloatingWizardButton from '../components/FloatingWizardButton';
 
 interface TeamMember {
   name: string;
@@ -84,6 +86,7 @@ const TeamPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white py-20 px-4">
+      <PageTitle title="Our Team" description="Meet the talented developers and artists behind Killua Discord Bot." />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">

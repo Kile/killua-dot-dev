@@ -12,6 +12,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer';
 import UpdateProgression from '../components/UpdateProgression';
 import StyledSelect from '../components/StyledSelect';
 import { getThumbnailClasses } from '../utils/imageUtils';
+import PageTitle from '../components/PageTitle';
 
 const NewsPage: React.FC = () => {
   const [news, setNews] = useState<NewsResponse[]>([]);
@@ -253,6 +254,7 @@ const NewsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-discord-darker text-white py-8">
+      <PageTitle title="News & Updates" description="Stay up to date with the latest features and changes to Killua Discord Bot." />
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">

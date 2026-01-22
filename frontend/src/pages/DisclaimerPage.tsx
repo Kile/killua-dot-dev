@@ -1,9 +1,11 @@
 import React from 'react';
 import { Shield, Mail, FileText, Eye, Lock, Users } from 'lucide-react';
+import PageTitle from '../components/PageTitle';
 
 const DisclaimerPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-discord-darker text-white py-20 px-4">
+      <PageTitle title="Privacy & Disclaimer" description="Learn how Killua Discord Bot handles your privacy and data security." />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">

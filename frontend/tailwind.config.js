@@ -18,7 +18,16 @@ export default {
           dark: '#2C2F33',
           darker: '#23272A',
         }
-      }
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { backgroundPosition: '200% center' },
+          '100%': { backgroundPosition: '-200% center' },
+        },
+      },
+      animation: {
+        shimmer: 'shimmer 3s ease-in-out infinite',
+      },
     },
   },
   plugins: [],
