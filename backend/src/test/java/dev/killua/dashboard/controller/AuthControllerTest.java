@@ -12,10 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -38,6 +40,9 @@ class AuthControllerTest {
     @Mock
     private DiscordTokenService discordTokenService;
 
+    @Mock
+    private RestTemplate restTemplate;
+
     @InjectMocks
     private AuthController authController;
 
@@ -45,6 +50,7 @@ class AuthControllerTest {
     void setup() {
         mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
         ReflectionTestUtils.setField(authController, "objectMapper", objectMapper);
+        ReflectionTestUtils.setField(authController, "externalApiBaseUrl", "http://mock-api");
     }
 
     private UserDto buildUser() {
@@ -110,12 +116,103 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/logout - always ok")
-    void logout_alwaysOk() throws Exception {
+    @DisplayName("POST /api/auth/logout - missing auth header returns 400")
+    void logout_missingHeader_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/logout - invalid auth header returns 400")
+    void logout_invalidHeader_returnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
-                .header("Authorization", "Bearer anything"))
+                .header("Authorization", "NotBearer token"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error", containsString("Invalid authorization header")));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/logout - success calls external API, revokes Discord token, and removes from DB")
+    void logout_success_callsExternalApiAndRemovesToken() throws Exception {
+        Mockito.when(discordTokenService.getDiscordToken(eq("jwt-token")))
+            .thenReturn("discord-secret-token");
+        Mockito.when(restTemplate.exchange(
+                eq("http://mock-api/logout"),
+                eq(HttpMethod.POST),
+                Mockito.any(HttpEntity.class),
+                eq(String.class)))
+            .thenReturn(new ResponseEntity<>("OK", HttpStatus.OK));
+
+        mockMvc.perform(post("/api/auth/logout")
+                .header("Authorization", "Bearer jwt-token"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message", containsString("Logged out successfully")));
+
+        // Verify the external API was called with the discord token
+        Mockito.verify(restTemplate).exchange(
+            eq("http://mock-api/logout"),
+            eq(HttpMethod.POST),
+            Mockito.argThat(entity -> {
+                HttpEntity<?> httpEntity = (HttpEntity<?>) entity;
+                String authHeader = httpEntity.getHeaders().getFirst("Authorization");
+                return authHeader != null && authHeader.equals("Bearer discord-secret-token");
+            }),
+            eq(String.class));
+
+        // Verify the Discord token was revoked
+        Mockito.verify(authService).revokeDiscordToken(eq("discord-secret-token"));
+
+        // Verify the local token was removed from the database
+        Mockito.verify(discordTokenService).removeDiscordToken(eq("jwt-token"));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/logout - succeeds even when external API fails")
+    void logout_externalApiFails_stillSucceeds() throws Exception {
+        Mockito.when(discordTokenService.getDiscordToken(eq("jwt-token")))
+            .thenReturn("discord-secret-token");
+        Mockito.when(restTemplate.exchange(
+                eq("http://mock-api/logout"),
+                eq(HttpMethod.POST),
+                Mockito.any(HttpEntity.class),
+                eq(String.class)))
+            .thenThrow(new RestClientException("Connection refused"));
+
+        mockMvc.perform(post("/api/auth/logout")
+                .header("Authorization", "Bearer jwt-token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message", containsString("Logged out successfully")));
+
+        // Discord token should still be revoked even if external API call failed
+        Mockito.verify(authService).revokeDiscordToken(eq("discord-secret-token"));
+
+        // Local token should still be removed even if external call failed
+        Mockito.verify(discordTokenService).removeDiscordToken(eq("jwt-token"));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/logout - no discord token skips external call and revocation")
+    void logout_noDiscordToken_skipsExternalCall() throws Exception {
+        Mockito.when(discordTokenService.getDiscordToken(eq("jwt-token")))
+            .thenReturn(null);
+
+        mockMvc.perform(post("/api/auth/logout")
+                .header("Authorization", "Bearer jwt-token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message", containsString("Logged out successfully")));
+
+        // External API should NOT have been called
+        Mockito.verify(restTemplate, Mockito.never()).exchange(
+            Mockito.anyString(),
+            Mockito.any(HttpMethod.class),
+            Mockito.any(HttpEntity.class),
+            Mockito.eq(String.class));
+
+        // Discord revocation should NOT have been called
+        Mockito.verify(authService, Mockito.never()).revokeDiscordToken(Mockito.anyString());
+
+        // Local token removal should NOT have been called (no token to remove)
+        Mockito.verify(discordTokenService, Mockito.never()).removeDiscordToken(Mockito.anyString());
     }
 
     @Test
