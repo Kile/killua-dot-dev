@@ -109,9 +109,41 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
-        // In a stateless JWT system, logout is typically handled client-side
-        // by removing the token from storage
-        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+        String jwtToken = extractJwtToken(authHeader);
+        if (jwtToken == null) {
+            return createInvalidAuthResponse();
+        }
+
+        try {
+            // Get the Discord token to forward to the external API
+            String discordToken = discordTokenService.getDiscordToken(jwtToken);
+
+            if (discordToken != null) {
+                // Call external API /logout to clear the cached token there
+                try {
+                    String logoutUrl = externalApiBaseUrl + "/logout";
+
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setBearerAuth(discordToken);
+
+                    HttpEntity<String> request = new HttpEntity<>(headers);
+
+                    restTemplate.exchange(logoutUrl, HttpMethod.POST, request, String.class);
+                } catch (Exception e) {
+                    System.err.println("Failed to call external API logout: " + e.getMessage());
+                }
+
+                // Revoke the Discord OAuth token so it can no longer be used
+                authService.revokeDiscordToken(discordToken);
+
+                // Remove the local Discord token mapping from the database
+                discordTokenService.removeDiscordToken(jwtToken);
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
     
     @GetMapping("/discord-token")
@@ -341,7 +373,7 @@ public class AuthController {
                 }
             }
             
-            // Add editable, premium, and member count to each guild (compare as strings to preserve ID precision)
+            // Add editable and premium flags to each guild (compare as strings to preserve ID precision)
             final java.util.Set<String> finalEditableGuildIds = editableGuildIds;
             final java.util.Set<String> finalPremiumGuildIds = premiumGuildIds;
             manageableGuilds.forEach(guild -> {

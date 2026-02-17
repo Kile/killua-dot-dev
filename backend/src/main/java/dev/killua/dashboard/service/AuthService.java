@@ -303,6 +303,30 @@ public class AuthService implements UserDetailsService {
     public boolean isAdmin(String discordId) {
         return adminDiscordIds.contains(discordId);
     }
+
+    /**
+     * Revoke a Discord OAuth access token via Discord's token revocation endpoint.
+     * This invalidates the token so it can no longer be used against the Discord API.
+     */
+    public void revokeDiscordToken(String discordAccessToken) {
+        try {
+            String revokeUrl = "https://discord.com/api/oauth2/token/revoke";
+
+            String requestBody = String.format(
+                "token=%s&client_id=%s&client_secret=%s",
+                discordAccessToken, clientId, clientSecret
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+            restTemplate.postForEntity(revokeUrl, request, String.class);
+        } catch (Exception e) {
+            System.err.println("Failed to revoke Discord token: " + e.getMessage());
+        }
+    }
     
     public void editUserSettings(String jwtToken, String userId, UserEditPayloadDto userEditPayload) throws Exception {
         try {

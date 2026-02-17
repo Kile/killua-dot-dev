@@ -156,8 +156,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return fetchPromise;
   }, [guilds]);
 
-  // Clear guilds cache on logout
-  const logoutWithClear = useCallback(() => {
+  // Clear guilds cache on logout and notify the backend
+  const logoutWithClear = useCallback(async () => {
+    const token = localStorage.getItem('discord_token');
+
+    // Call backend logout to revoke tokens server-side
+    if (token) {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      } catch (error) {
+        console.error('Error calling logout API:', error);
+      }
+    }
+
     setUser(null);
     localStorage.removeItem('discord_token');
     localStorage.removeItem('discord_user');
