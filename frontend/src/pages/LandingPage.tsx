@@ -41,43 +41,43 @@ const LandingPage: React.FC = () => {
     {
       title: 'Actions',
       description: 'The most advanced action commands on discord',
-      image: '/features/1.png',
+      image: '/features/1.webp',
       highlight: 'most'
     },
     {
       title: 'Cards',
       description: 'Battle & collect with Killua\'s own "Greed Island" themed card game',
-      image: '/features/2.png',
+      image: '/features/2.webp',
       highlight: 'Greed Island'
     },
     {
       title: 'Todo lists',
       description: 'Powerful todo lists equipped for anything (even rickrolls)',
-      image: '/features/3.png',
+      image: '/features/3.webp',
       highlight: 'anything'
     },
     {
       title: 'Games',
       description: 'Challenge your friends to various games or play singleplayer',
-      image: '/features/4.png',
+      image: '/features/4.webp',
       highlight: 'games'
     },
     {
       title: 'Image manipulation',
       description: 'Let images descend into madness with image manipulation',
-      image: '/features/5.png',
+      image: '/features/5.webp',
       highlight: 'madness'
     },
     {
       title: 'Tags',
       description: 'Tags built to save time and Rick Astley GIFs',
-      image: '/features/6.png',
+      image: '/features/6.webp',
       highlight: 'built'
     },
     {
       title: 'And much more',
       description: 'Make use of Killua\'s over 100 commands',
-      image: '/features/7.png',
+      image: '/features/7.webp',
       highlight: 'much'
     }
   ];
@@ -232,7 +232,7 @@ const LandingPage: React.FC = () => {
             {/* Right: Transparent illustration (no border) */}
             <div className="flex-1 hidden md:flex justify-end">
               <img
-                src="/illustrations/main-stats.png"
+                src="/illustrations/main-stats.webp"
                 alt="Killua illustration"
                 className="max-h-[640px] w-auto"
               />
@@ -325,7 +325,7 @@ const LandingPage: React.FC = () => {
                 >
                   <div className="flex items-center mb-3">
                     <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center p-2`}>
-                      <img src="/brand/discord-logo.png" alt="" className="w-6 h-6 object-contain" />
+                      <img src="/brand/discord-logo.webp" alt="" className="w-6 h-6 object-contain" />
                     </div>
                     <div className="ml-3">
                       <div className="font-semibold text-white">{review.name}</div>
@@ -351,7 +351,7 @@ const LandingPage: React.FC = () => {
                 >
                   <div className="flex items-center mb-3">
                     <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center p-2`}>
-                      <img src="/brand/discord-logo.png" alt="" className="w-6 h-6 object-contain" />
+                      <img src="/brand/discord-logo.webp" alt="" className="w-6 h-6 object-contain" />
                     </div>
                     <div className="ml-3">
                       <div className="font-semibold text-white">{review.name}</div>

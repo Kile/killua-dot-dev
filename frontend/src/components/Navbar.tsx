@@ -110,7 +110,7 @@ const Navbar: React.FC = () => {
                 src={logoSrc}
                 alt="Killua"
                 className="w-8 h-8 rounded"
-                onError={() => setLogoSrc(logoSrc === '/brand/logo.svg' ? '/brand/logo.png' : null)}
+                onError={() => setLogoSrc(logoSrc === '/brand/logo.svg' ? '/brand/logo.webp' : null)}
               />
             ) : (
               <div className="w-8 h-8 bg-discord-blurple rounded-lg flex items-center justify-center">
@@ -245,7 +245,7 @@ const Navbar: React.FC = () => {
                   onClick={login}
                   className="bg-discord-blurple hover:bg-discord-blurple/80 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
                 >
-                  <img src="/brand/discord-logo.png" alt="Discord" className="h-4 w-4" />
+                  <img src="/brand/discord-logo.webp" alt="Discord" className="h-4 w-4" />
                   <span>Login</span>
                 </button>
               )}

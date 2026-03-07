@@ -17,7 +17,7 @@ const Loading: React.FC<LoadingProps> = ({ size = 'md', className = '', alt = 'L
   const sizes = sizeMap[size];
 
   const handleError = () => {
-    if (src === '/brand/loader.svg') setSrc('/brand/loader.png');
+    if (src === '/brand/loader.svg') setSrc('/brand/loader.webp');
     else setSrc(null);
   };
 

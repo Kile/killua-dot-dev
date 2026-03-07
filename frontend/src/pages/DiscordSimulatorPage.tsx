@@ -200,7 +200,7 @@ const UserAvatar: React.FC<{ colorKey?: string; src?: string; size?: 'sm' | 'md'
       {src ? (
         <img src={src} alt="" className="w-full h-full object-cover" />
       ) : (
-        <img src="/brand/discord-logo.png" alt="" className={`${logoSize} brightness-0 invert`} />
+        <img src="/brand/discord-logo.webp" alt="" className={`${logoSize} brightness-0 invert`} />
       )}
     </div>
   );
@@ -403,7 +403,7 @@ const DiscordSelectComponent: React.FC<{
             } else if (isCustomEmoji) {
               return (
                 <img 
-                  src={`/simulations/emoji/${emoji.slice(1, -1)}.png`} 
+                  src={`/simulations/emoji/${emoji.slice(1, -1)}.webp`} 
                   alt={emoji}
                   className="max-w-4 max-h-4 w-auto h-auto object-contain opacity-70"
                   onError={(e) => {
@@ -468,7 +468,7 @@ const DiscordSelectComponent: React.FC<{
                   } else if (isCustomEmoji) {
                     return (
                       <img 
-                        src={`/simulations/emoji/${emoji.slice(1, -1)}.png`} 
+                        src={`/simulations/emoji/${emoji.slice(1, -1)}.webp`} 
                         alt={emoji}
                         className="max-w-4 max-h-4 w-auto h-auto object-contain"
                         onError={(e) => {
@@ -532,7 +532,7 @@ const DiscordSelectComponent: React.FC<{
                   } else if (isCustomEmoji) {
                     return (
                       <img 
-                        src={`/simulations/emoji/${emoji.slice(1, -1)}.png`} 
+                        src={`/simulations/emoji/${emoji.slice(1, -1)}.webp`} 
                         alt={emoji}
                         className="max-w-4 max-h-4 w-auto h-auto object-contain"
                         onError={(e) => {
@@ -685,7 +685,7 @@ const MessageComponent: React.FC<{
       parts.push(
         <img 
           key={`emoji-${keyCounter++}`} 
-          src={`/simulations/emoji/${emojiName}.png`} 
+          src={`/simulations/emoji/${emojiName}.webp`} 
           alt={`:${emojiName}:`}
           className="inline max-w-4 max-h-4 w-auto h-auto align-middle object-contain"
           style={{ display: 'inline', verticalAlign: 'middle' }}
@@ -781,7 +781,7 @@ const MessageComponent: React.FC<{
     : message.author.avatar
     ? message.author.avatar
     : message.author.isBot 
-      ? '/brand/logo.png' 
+      ? '/brand/logo.webp' 
       : undefined;
 
   const nameColor = message.author.nameColor 
@@ -965,7 +965,7 @@ const MessageComponent: React.FC<{
                           {iconSrc ? (
                             <img src={iconSrc} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <img src="/brand/discord-logo.png" alt="" className="w-3 h-3 brightness-0 invert" />
+                            <img src="/brand/discord-logo.webp" alt="" className="w-3 h-3 brightness-0 invert" />
                           )}
                         </div>
                       );
@@ -1277,7 +1277,7 @@ const DiscordSimulatorPage: React.FC = () => {
                     title: '**{user}** finds a lamp with a Jinn and gets a wish. So they wish to hug **Alex**',
                     description: '-# Art by [Joedi](https://x.com/joedi___)',
                     color: '#FFB6C1',
-                    image: '/simulations/hug.jpg',
+                    image: '/simulations/hug.webp',
                     footer: 'ⓘ This artwork has been created specifically for this bot'
                   },
                 buttons: [
@@ -1363,11 +1363,11 @@ const DiscordSimulatorPage: React.FC = () => {
                   footer: 'Page 1/3',
                 },
                 buttons: [
-                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_left.png' },
-                  { label: '', style: 'primary', emoji: '/simulations/arrow_left.png' },
-                  { label: '', style: 'danger', emoji: '/simulations/bin.png' },
-                  { label: '', style: 'primary', emoji: '/simulations/arrow_right.png' },
-                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_right.png' },
+                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_left.webp' },
+                  { label: '', style: 'primary', emoji: '/simulations/arrow_left.webp' },
+                  { label: '', style: 'danger', emoji: '/simulations/bin.webp' },
+                  { label: '', style: 'primary', emoji: '/simulations/arrow_right.webp' },
+                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_right.webp' },
                 ],
                 delay: 2000
               }
@@ -1392,16 +1392,16 @@ const DiscordSimulatorPage: React.FC = () => {
               author: { name: 'Killua', isBot: true },
                 embed: {
                   title: 'Results for query: Percy Jackson actor',
-                  image: '/simulations/img-response.jpg',
+                  image: '/simulations/img-response.webp',
                   color: '#3E4A78',
                   footer: 'Page 1/35 • Today at 16:20',
                 },
                 buttons: [
-                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_left.png' },
-                  { label: '', style: 'primary', emoji: '/simulations/arrow_left.png' },
-                  { label: '', style: 'danger', emoji: '/simulations/bin.png' },
-                  { label: '', style: 'primary', emoji: '/simulations/arrow_right.png' },
-                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_right.png' },
+                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_left.webp' },
+                  { label: '', style: 'primary', emoji: '/simulations/arrow_left.webp' },
+                  { label: '', style: 'danger', emoji: '/simulations/bin.webp' },
+                  { label: '', style: 'primary', emoji: '/simulations/arrow_right.webp' },
+                  { label: '', style: 'primary', emoji: '/simulations/double_arrow_right.webp' },
                 ],
                 delay: 1000
               }
@@ -1469,14 +1469,14 @@ const DiscordSimulatorPage: React.FC = () => {
                   embed: {
                     title: '**{user}**\'s book',
                     color: '#2F3136',
-                    image: '/simulations/book.png'
+                    image: '/simulations/book.webp'
                   },
                   buttons: [
-                    { label: '', style: 'primary', emoji: '/simulations/double_arrow_left.png' },
-                    { label: '', style: 'primary', emoji: '/simulations/arrow_left.png' },
-                    { label: '', style: 'danger', emoji: '/simulations/bin.png' },
-                    { label: '', style: 'primary', emoji: '/simulations/arrow_right.png' },
-                    { label: '', style: 'primary', emoji: '/simulations/double_arrow_right.png' },
+                    { label: '', style: 'primary', emoji: '/simulations/double_arrow_left.webp' },
+                    { label: '', style: 'primary', emoji: '/simulations/arrow_left.webp' },
+                    { label: '', style: 'danger', emoji: '/simulations/bin.webp' },
+                    { label: '', style: 'primary', emoji: '/simulations/arrow_right.webp' },
+                    { label: '', style: 'primary', emoji: '/simulations/double_arrow_right.webp' },
                   ],
                   delay: 1000
               }
@@ -1723,7 +1723,7 @@ const DiscordSimulatorPage: React.FC = () => {
                 select: {
                   id: 'defend-spell',
                   options: [
-                    { label: 'Defensive Wall', value: '1003', emoji: '/simulations/emoji/card_number_1003.png' },
+                    { label: 'Defensive Wall', value: '1003', emoji: '/simulations/emoji/card_number_1003.webp' },
                   ],
                   callback: (_, helpers) => {
                     helpers.resume();
@@ -1746,7 +1746,7 @@ const DiscordSimulatorPage: React.FC = () => {
               select: {
                 id: 'defend-spell',
                 options: [
-                  { label: 'Defensive Wall', value: '1003', emoji: '/simulations/emoji/card_number_1003.png' },
+                  { label: 'Defensive Wall', value: '1003', emoji: '/simulations/emoji/card_number_1003.webp' },
                 ], disabled: true,
                 callback: () => {}
               } },
@@ -2006,7 +2006,7 @@ const DiscordSimulatorPage: React.FC = () => {
           messages: [
             {
               type: 'message',
-              author: { name: 'Rick Astley', avatar: '/simulations/RickAstley.png' },
+              author: { name: 'Rick Astley', avatar: '/simulations/RickAstley.webp' },
               content: "Hey guys check out this link: [https://www.youtube.com/watch?v=dQw4w9WgXcQ](https://www.youtube.com/watch?v=dQw4w9WgXcQ)",
               delay: 2500
             },
@@ -2016,13 +2016,13 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
               author: { name: 'Killua', isBot: true },
-              image: '/simulations/jpeg.png', // ironic filename lol
+              image: '/simulations/jpeg.webp', // ironic filename lol
               delay: 1200
               }
             },
             {
               type: 'message',
-              author: { name: 'Rick Astley', avatar: '/simulations/RickAstley.png' },
+              author: { name: 'Rick Astley', avatar: '/simulations/RickAstley.webp' },
               content: "Oh no...",
               delay: 2000
             },
@@ -2032,7 +2032,7 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
                   author: { name: 'Killua', isBot: true },
-                  image: '/simulations/lego.png',
+                  image: '/simulations/lego.webp',
                   delay: 1200
                 }
             },
@@ -2042,7 +2042,7 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
                   author: { name: 'Killua', isBot: true },
-                  image: '/simulations/flag.png',
+                  image: '/simulations/flag.webp',
                   delay: 1200
                 }
             },
@@ -2052,7 +2052,7 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
                   author: { name: 'Killua', isBot: true },
-                  image: '/simulations/nokia.png',
+                  image: '/simulations/nokia.webp',
                   delay: 1200
                 }
             },
@@ -2068,7 +2068,7 @@ const DiscordSimulatorPage: React.FC = () => {
                 },
                 {
               type: 'message',
-                  author: { name: 'Rick Astley', avatar: '/simulations/RickAstley.png' },
+                  author: { name: 'Rick Astley', avatar: '/simulations/RickAstley.webp' },
                   content: "Now you've done it... I will definitely give you up now...",
                   delay: 2000
                 },
@@ -2113,7 +2113,7 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
                 author: { name: 'Killua', isBot: true },
-                image: '/simulations/thonkify.png',
+                image: '/simulations/thonkify.webp',
                 delay: 1000
               }
             },
@@ -2129,7 +2129,7 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
                 author: { name: 'Killua', isBot: true },
-                image: '/simulations/sonic.png',
+                image: '/simulations/sonic.webp',
                 delay: 1000
               }
             },
@@ -2149,7 +2149,7 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
                 author: { name: 'Killua', isBot: true },
-                image: '/simulations/wtf.png',
+                image: '/simulations/wtf.webp',
                 delay: 1000
               }
             },
@@ -2159,7 +2159,7 @@ const DiscordSimulatorPage: React.FC = () => {
               response: {
                 type: 'message',
                 author: { name: 'Killua', isBot: true },
-                image: '/simulations/sonic2.png',
+                image: '/simulations/sonic2.webp',
                 delay: 1000
               }
             },

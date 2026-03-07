@@ -24,18 +24,18 @@ interface BadgeIconProps {
 
 // Map badge keys to custom image filenames placed under /public/badges
 const customIconMap: Record<string, string> = {
-  'rps_master': 'rps_master.png',
-  'developer': 'developer.png',
-  'artist': 'artist.png',
-  'early_supporter': 'early_supporter.png',
-  'pro_hugger': 'pro_hugger.png',
-  'pro_hugged': 'pro_hugged.png',
-  'full_book': 'full_book.png',
-  'partner': 'partner.png', 
-  '6002629': 'tier_1.png',
-  '6002630': 'tier_2.png',
-  '6002631': 'tier_3.png',
-  'premium': 'premium_guild.png',
+  'rps_master': 'rps_master.webp',
+  'developer': 'developer.webp',
+  'artist': 'artist.webp',
+  'early_supporter': 'early_supporter.webp',
+  'pro_hugger': 'pro_hugger.webp',
+  'pro_hugged': 'pro_hugged.webp',
+  'full_book': 'full_book.webp',
+  'partner': 'partner.webp', 
+  '6002629': 'tier_1.webp',
+  '6002630': 'tier_2.webp',
+  '6002631': 'tier_3.webp',
+  'premium': 'premium_guild.webp',
 };
 
 const BadgeIcon: React.FC<BadgeIconProps> = ({ badgeName, className = "w-6 h-6" }) => {

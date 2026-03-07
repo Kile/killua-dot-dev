@@ -18,16 +18,16 @@ const TeamPage: React.FC = () => {
     {
       name: 'Kile',
       role: 'Main Developer',
-      description: "Hi, I'm the main dev of Killua and aspiring developer, I have knowledge in js, ts, rust, python, and c#. If you have any questions about python, Killua or discord in general, feel free to contact me. I am also for hire for your projects.",
-      image: '/team/kile.png',
+      description: "Hi, I'm the main developer of Killua! I have been working on this bot for over 5 years as a passion project. I use Killua to teach myself new tech and to work on things that seem fun. Over the years, this has taught me a lot of tech including TypeScript, Rust, Python, C#, Java, Docker, ZMQ and more. Feel free to contact me on Discord about any questions about the bot or if you are interested in contributing!",
+      image: '/team/kile.webp',
       github: 'https://github.com/Kile',
-      skills: ['JavaScript', 'TypeScript', 'Rust', 'Python', 'C#']
+      skills: ['JavaScript', 'TypeScript', 'Rust', 'Python', 'C#', 'Java', 'Docker', 'ZeroMQ']
     },
     {
       name: 'ClashCrafter',
       role: 'Developer',
       description: 'I am a 15 year old boy from Germany. I love games and PCs. In my spare time I program with C#, TypeScript and Python and I would like to study computer science.',
-      image: '/team/clashcrafter.png',
+      image: '/team/clashcrafter.webp',
       github: 'https://github.com/FlorianStrobl',
       skills: ['C#', 'TypeScript', 'Python']
     },
@@ -35,7 +35,7 @@ const TeamPage: React.FC = () => {
       name: 'DerUSBstick',
       role: 'Developer',
       description: "Hi, I am DerUSBstick and I am from Germany. In my free time I really enjoy playing games or coding. I code in Python and I am going to start my apprenticeship as software developer soon™️.",
-      image: '/team/derusbstick.png',
+      image: '/team/derusbstick.webp',
       github: 'https://github.com/DerUSBstick',
       skills: ['Python', 'Software Development']
     },
@@ -43,7 +43,7 @@ const TeamPage: React.FC = () => {
       name: 'danii',
       role: 'Backend Developer',
       description: "Someone trying to make something interesting for the world to enjoy. Back end developer and tinkerer. Looking for a job.",
-      image: '/team/danii.jpeg',
+      image: '/team/danii.webp',
       github: 'https://github.com/danii',
       skills: ['Backend Development', 'System Architecture']
     },
@@ -51,7 +51,7 @@ const TeamPage: React.FC = () => {
       name: 'MNW',
       role: 'Artist & Illustrator',
       description: "こんにちは、MISOTO です、I love to Illustrate and am really into Manga and Illustrations. Right now I'm a bit busy. Let's keep thriving our dreams!",
-      image: '/team/mnw.png',
+      image: '/team/mnw.webp',
       linktree: 'https://linktr.ee/Michaelnw_mnw',
       skills: ['Illustration', 'Manga Art', 'Digital Art']
     },
@@ -59,7 +59,7 @@ const TeamPage: React.FC = () => {
       name: 'WhoAmI',
       role: 'Web Developer',
       description: 'Hello. I am a developer from the US who mainly specializes in websites. I also code in other languages, such as JS, Python, etc.',
-      image: '/team/whoami.png',
+      image: '/team/whoami.webp',
       github: 'https://github.com/WhoAmI1000',
       skills: ['Web Development', 'JavaScript', 'Python']
     },
@@ -67,7 +67,7 @@ const TeamPage: React.FC = () => {
       name: 'devmkay',
       role: 'Fullstack Developer',
       description: 'Fullstack Web Developer.',
-      image: '/team/devmkay.png',
+      image: '/team/devmkay.webp',
       github: 'https://github.com/miko0000',
       skills: ['Fullstack Development', 'Web Technologies']
     }

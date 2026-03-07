@@ -88,7 +88,7 @@ const ExploreLandingPage: React.FC = () => {
           </p>
           
           {/* Discord-style Input Box with Typing Animation */}
-          <div className="max-w-2xl mx-auto mb-8">
+          <div className="max-w-2xl mx-auto mb-8 flex items-center justify-center min-h-[6.5rem] sm:min-h-[5rem] md:min-h-[3.5rem]">
             <div className="w-full bg-discord-darker text-white px-4 py-3 rounded-lg border border-gray-600 flex items-center min-h-[3rem]">
               {/* Text content - wraps naturally, left-aligned */}
               <div className="flex-1 min-w-0 text-left">

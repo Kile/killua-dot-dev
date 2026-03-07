@@ -65,7 +65,7 @@ const PremiumPage: React.FC = () => {
       ],
       headerBg: 'bg-amber-600', // bronze
       fallbackIcon: Heart,
-      iconAsset: 'tier_1.png',
+      iconAsset: 'tier_1.webp',
       shimmerBorder: 'tier-border-bronze'
     },
     {
@@ -81,7 +81,7 @@ const PremiumPage: React.FC = () => {
       popular: true,
       headerBg: 'bg-gray-400', // silver
       fallbackIcon: Star,
-      iconAsset: 'tier_2.png',
+      iconAsset: 'tier_2.webp',
       shimmerBorder: 'tier-border-silver'
     },
     {
@@ -96,7 +96,7 @@ const PremiumPage: React.FC = () => {
       ],
       headerBg: 'bg-yellow-500', // gold
       fallbackIcon: Crown,
-      iconAsset: 'tier_3.png',
+      iconAsset: 'tier_3.webp',
       shimmerBorder: 'tier-border-gold'
     }
   ];
