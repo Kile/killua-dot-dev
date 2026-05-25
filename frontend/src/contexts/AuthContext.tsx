@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { DiscordUser, DiscordGuild, AuthContextType } from '../types/auth';
 import { useLocation } from 'react-router-dom';
 import { fetchUserGuilds } from '../services/guildService';
+import { isAbortError } from '../hooks/useAsyncEffect';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,11 +23,16 @@ interface AuthProviderProps {
 const GUILDS_CACHE_TTL = 5 * 60 * 1000;
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<DiscordUser | null>(null);
+  const [user, setUser] = useState<DiscordUser | null>(() => {
+    try {
+      const stored = localStorage.getItem('discord_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const hasCheckedSession = useRef(false);
-  const isCheckingSession = useRef(false);
   const location = useLocation();
   
   // Guilds cache state
@@ -39,65 +45,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const REDIRECT_URI = `${window.location.origin}/auth/callback`;
 
   useEffect(() => {
-    // Skip session check if we're on the auth callback page OR if we're in the middle of logging in
     if (location.pathname === '/auth/callback' || isLoggingIn) {
       setLoading(false);
       return;
     }
 
-    // Check for existing session in localStorage
+    const controller = new AbortController();
+    const { signal } = controller;
+
     const checkSession = async () => {
       try {
         const token = localStorage.getItem('discord_token');
-        const userData = localStorage.getItem('discord_user');
-        
-        if (token && userData) {
-          try {
-            // Verify token with backend
-            const response = await fetch(`/api/auth/verify`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            
-            if (response.ok) {
-              const verifiedUser = await response.json();
-              setUser(verifiedUser);
-            } else {
-              // Token invalid, clear storage silently
-              localStorage.removeItem('discord_token');
-              localStorage.removeItem('discord_user');
-            }
-          } catch (error) {
-            console.error('Error verifying token:', error);
-            // Clear storage on error silently
-            localStorage.removeItem('discord_token');
-            localStorage.removeItem('discord_user');
-          }
+        if (!token) {
+          setUser(null);
+          return;
+        }
+
+        const response = await fetch('/api/auth/verify', {
+          headers: { Authorization: `Bearer ${token}` },
+          signal,
+        });
+
+        if (signal.aborted) return;
+
+        if (response.ok) {
+          const verifiedUser = await response.json();
+          if (signal.aborted) return;
+          setUser(verifiedUser);
+          localStorage.setItem('discord_user', JSON.stringify(verifiedUser));
+        } else {
+          setUser(null);
+          localStorage.removeItem('discord_token');
+          localStorage.removeItem('discord_user');
         }
       } catch (error) {
-        console.error('Error checking session:', error);
+        if (signal.aborted || isAbortError(error)) return;
+        console.error('Error verifying token:', error);
+        // Keep cached session on transient network errors
       } finally {
-        setLoading(false);
+        if (!signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
-    // Only check session once, and only if we don't already have a user and we're not in the middle of logging in
-    if (!hasCheckedSession.current && !user && !isLoggingIn && !isCheckingSession.current) {
-      isCheckingSession.current = true;
-      const controller = new AbortController();
-      checkSession();
-      hasCheckedSession.current = true;
-      
-      // Cleanup function to prevent race conditions
-      return () => {
-        controller.abort();
-        isCheckingSession.current = false;
-      };
-    } else {
-      setLoading(false);
-    }
-  }, [user, isLoggingIn, location.pathname]);
+    checkSession();
+
+    return () => controller.abort();
+  }, [isLoggingIn]);
 
   const login = () => {
     setIsLoggingIn(true);

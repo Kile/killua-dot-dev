@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bot, Users, Server, Heart, Star, X, ChevronRight } from 'lucide-react';
 import LinkButton from '../components/LinkButton';
@@ -7,6 +7,7 @@ import FloatingWizardButton from '../components/FloatingWizardButton';
 import PageTitle from '../components/PageTitle';
 import WizardModal from '../components/WizardModal';
 import { botCategories } from '../utils/exploreCategories';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 interface Stats {
   guilds: number;
@@ -21,21 +22,22 @@ const LandingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [wizardOpen, setWizardOpen] = useState(false);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  useAsyncEffect(async (signal) => {
     try {
-      const response = await fetch('/api/stats');
+      const response = await fetch('/api/stats', { signal });
+      if (signal.aborted) return;
       const data = await response.json();
+      if (signal.aborted) return;
       setStats(data);
-      setLoading(false);
     } catch (error) {
+      if (signal.aborted || isAbortError(error)) return;
       console.error('Error fetching stats:', error);
-      setLoading(false);
+    } finally {
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
   const features = [
     {

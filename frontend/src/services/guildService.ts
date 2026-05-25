@@ -1,12 +1,13 @@
 import type { DiscordGuild } from '../types/auth';
 import type { GuildInfo, TagCreatePayload, TagEditPayload, TagDeletePayload, TagResponse } from '../types/guild';
 
-export const fetchUserGuilds = async (jwtToken: string): Promise<DiscordGuild[]> => {
+export const fetchUserGuilds = async (jwtToken: string, signal?: AbortSignal): Promise<DiscordGuild[]> => {
   const response = await fetch('/api/auth/user/guilds', {
     headers: {
       'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
     },
+    signal,
   });
 
   if (!response.ok) {
@@ -16,12 +17,13 @@ export const fetchUserGuilds = async (jwtToken: string): Promise<DiscordGuild[]>
   return response.json();
 };
 
-export const fetchGuildInfo = async (jwtToken: string, guildId: string): Promise<GuildInfo> => {
+export const fetchGuildInfo = async (jwtToken: string, guildId: string, signal?: AbortSignal): Promise<GuildInfo> => {
   const response = await fetch(`/api/guild/${guildId}/info`, {
     headers: {
       'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
     },
+    signal,
   });
 
   if (!response.ok) {
@@ -137,7 +139,8 @@ export const fetchCommandUsage = async (
   guildId: string,
   from: string, // ISO date string
   to: string,   // ISO date string
-  interval: string
+  interval: string,
+  signal?: AbortSignal
 ): Promise<CommandUsageResponse> => {
   const params = new URLSearchParams({
     from: from,
@@ -150,6 +153,7 @@ export const fetchCommandUsage = async (
       'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
     },
+    signal,
   });
 
   const data = await response.json();

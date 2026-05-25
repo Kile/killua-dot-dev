@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Search, Shield, Database, Folder, FileText, RefreshCw, Server, Tag, Check, Hash, Edit3, Trash2, UserPlus, ChevronDown, ChevronUp, X, Settings, Users } from 'lucide-react';
@@ -14,6 +14,7 @@ import BadgeIcon from '../components/BadgeIcon';
 import ServerStats from '../components/ServerStats';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -65,20 +66,19 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) return;
-      try {
-        const jwtToken = localStorage.getItem('discord_token');
-        if (!jwtToken) throw new Error('No authentication token found');
-        const adminCheck = await checkAdminStatus(jwtToken);
-        setIsAdmin(adminCheck.isAdmin);
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        setIsAdmin(false);
-      }
-    };
-    checkAdmin();
+  useAsyncEffect(async (signal) => {
+    if (!user) return;
+    try {
+      const jwtToken = localStorage.getItem('discord_token');
+      if (!jwtToken) throw new Error('No authentication token found');
+      const adminCheck = await checkAdminStatus(jwtToken, signal);
+      if (signal.aborted) return;
+      setIsAdmin(adminCheck.isAdmin);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error checking admin status:', err);
+      setIsAdmin(false);
+    }
   }, [user]);
 
   const handleSearch = async () => {

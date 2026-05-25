@@ -4,6 +4,7 @@ import commandEmojiMap from '../utils/commandEmojiMap';
 import Loading from '../components/Loading';
 import PageTitle from '../components/PageTitle';
 import FloatingWizardButton from '../components/FloatingWizardButton';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 interface Command {
   name: string;
@@ -32,21 +33,22 @@ const CommandsPage: React.FC = () => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCommands();
-  }, []);
-
-  const fetchCommands = async () => {
+  useAsyncEffect(async (signal) => {
     try {
-      const response = await fetch('/api/commands');
+      const response = await fetch('/api/commands', { signal });
+      if (signal.aborted) return;
       const data = await response.json();
+      if (signal.aborted) return;
       setCommands(data);
-      setLoading(false);
     } catch (error) {
+      if (signal.aborted || isAbortError(error)) return;
       console.error('Error fetching commands:', error);
-      setLoading(false);
+    } finally {
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
   const toggleCategory = (categoryName: string) => {
     const newExpanded = new Set(expandedCategories);

@@ -24,6 +24,7 @@ import type { FileViewerToken } from '../services/fileService';
 import FileViewer from './FileViewer';
 import UploadModal from './UploadModal';
 import GenerateLinkModal from './GenerateLinkModal';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 interface FileManagerProps {
   token: string;
@@ -78,11 +79,12 @@ const FileManager: React.FC<FileManagerProps> = ({ token }) => {
     setShowDropdown(null);
   }, [currentPath]);
 
-  const loadFiles = async () => {
+  const loadFiles = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
-      const filePaths = await listFiles(token);
+      const filePaths = await listFiles(token, signal);
+      if (signal?.aborted) return;
       
       // Create file items and detect directories
       const allFileItems: FileItem[] = [];
@@ -135,13 +137,11 @@ const FileManager: React.FC<FileManagerProps> = ({ token }) => {
         });
       };
       
-      // Store all files for navigation
+      if (signal?.aborted) return;
       setAllFiles(sortItems(allFileItems));
       
-      // Filter files based on current path
       const filteredFiles = currentPath 
         ? allFileItems.filter(f => {
-            // Show files directly in current path (not directories)
             if (f.isDirectory) return false;
             
             const isDirectChild = f.path.startsWith(currentPath + '/') && 
@@ -149,31 +149,32 @@ const FileManager: React.FC<FileManagerProps> = ({ token }) => {
             
             return isDirectChild;
           })
-        : allFileItems.filter(f => f.path.split('/').length === 1); // Only root level items
+        : allFileItems.filter(f => f.path.split('/').length === 1);
       
       setFiles(sortItems(filteredFiles));
     } catch (err) {
+      if (signal?.aborted || isAbortError(err)) return;
       setError(err instanceof Error ? err.message : 'Failed to load files');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
-  useEffect(() => {
-    loadFiles();
+  useAsyncEffect(async (signal) => {
+    await loadFiles(signal);
   }, [token]);
 
-  const getFileViewerTokenData = async () => {
+  useAsyncEffect(async (signal) => {
     try {
-      const tokenData = await getFileViewerToken(token);
+      const tokenData = await getFileViewerToken(token, signal);
+      if (signal.aborted) return;
       setFileViewerToken(tokenData);
     } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
       console.error('Failed to get file viewer token:', err);
     }
-  };
-
-  useEffect(() => {
-    getFileViewerTokenData();
   }, [token]);
 
   const handleFileClick = (file: FileItem) => {

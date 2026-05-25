@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Crown, Star, Zap, Heart, Check, ExternalLink, CheckCircle } from 'lucide-react';
 import LinkButton from '../components/LinkButton';
 import { useAuth } from '../contexts/AuthContext';
 import PageTitle from '../components/PageTitle';
 import FloatingWizardButton from '../components/FloatingWizardButton';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 interface PremiumTier {
   id: string; // Patreon tier id
@@ -25,23 +26,22 @@ const PremiumPage: React.FC = () => {
   const [apiIsPremium, setApiIsPremium] = useState<boolean>(false);
   const [apiPremiumTier, setApiPremiumTier] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPremium = async () => {
-      try {
-        const jwtToken = localStorage.getItem('discord_token');
-        if (!jwtToken) return;
-        const res = await fetch('/api/auth/user/info', {
-          headers: { Authorization: `Bearer ${jwtToken}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        setApiIsPremium(Boolean(data.is_premium));
-        setApiPremiumTier(data.premium_tier ?? null);
-      } catch {
-        // ignore
-      }
-    };
-    fetchPremium();
+  useAsyncEffect(async (signal) => {
+    try {
+      const jwtToken = localStorage.getItem('discord_token');
+      if (!jwtToken) return;
+      const res = await fetch('/api/auth/user/info', {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+        signal,
+      });
+      if (signal.aborted || !res.ok) return;
+      const data = await res.json();
+      if (signal.aborted) return;
+      setApiIsPremium(Boolean(data.is_premium));
+      setApiPremiumTier(data.premium_tier ?? null);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+    }
   }, [user]);
 
   // current tier info not used in UI at the moment

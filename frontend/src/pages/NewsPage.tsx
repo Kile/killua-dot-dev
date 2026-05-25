@@ -13,6 +13,7 @@ import UpdateProgression from '../components/UpdateProgression';
 import StyledSelect from '../components/StyledSelect';
 import { getThumbnailClasses } from '../utils/imageUtils';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const NewsPage: React.FC = () => {
   const [news, setNews] = useState<NewsResponse[]>([]);
@@ -29,34 +30,50 @@ const NewsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchNews();
-  }, [location.pathname]);
+  useAsyncEffect(async (signal) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = getToken();
+      const data = await fetchAllNews(token || undefined, signal);
+      if (signal.aborted) return;
+      const sortedNews = data.news.sort((a: NewsResponse, b: NewsResponse) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      setNews(sortedNews);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      setError('Failed to load news');
+      console.error('Error fetching news:', err);
+    } finally {
+      if (!signal.aborted) {
+        setLoading(false);
+      }
+    }
+  }, [location.pathname, getToken]);
 
   // Check admin status when user changes
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) {
+  useAsyncEffect(async (signal) => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    
+    try {
+      const token = getToken();
+      if (!token) {
         setIsAdmin(false);
         return;
       }
       
-      try {
-        const token = getToken();
-        if (!token) {
-          setIsAdmin(false);
-          return;
-        }
-        
-        const adminCheck = await checkAdminStatus(token);
-        setIsAdmin(adminCheck.isAdmin);
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        setIsAdmin(false);
-      }
-    };
-    
-    checkAdmin();
+      const adminCheck = await checkAdminStatus(token, signal);
+      if (signal.aborted) return;
+      setIsAdmin(adminCheck.isAdmin);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error checking admin status:', err);
+      setIsAdmin(false);
+    }
   }, [user, getToken]);
 
   // Also refresh when the page becomes visible (for cases where pathname doesn't change)
@@ -77,7 +94,6 @@ const NewsPage: React.FC = () => {
       setError(null);
       const token = getToken();
       const data = await fetchAllNews(token || undefined);
-      // Sort by timestamp (newest first)
       const sortedNews = data.news.sort((a: NewsResponse, b: NewsResponse) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );

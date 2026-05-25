@@ -12,6 +12,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer';
 import UpdateProgression from '../components/UpdateProgression';
 import SmartImageLayout from '../components/SmartImageLayout';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const NewsDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,49 +27,60 @@ const NewsDetailPage: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { getToken, user } = useAuth();
 
-  useEffect(() => {
-    if (id) {
-      fetchNewsItem(id);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    const fetchAllNewsData = async () => {
-      try {
-        const token = getToken();
-        const data = await fetchAllNews(token || undefined);
-        setAllNews(data.news);
-      } catch (err) {
-        console.error('Error fetching all news:', err);
+  useAsyncEffect(async (signal) => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const token = getToken();
+      const data = await fetchNewsById(id, token || undefined, signal);
+      if (signal.aborted) return;
+      setNews(data);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      setError('Failed to load news article');
+      console.error('Error fetching news item:', err);
+    } finally {
+      if (!signal.aborted) {
+        setLoading(false);
       }
-    };
-    fetchAllNewsData();
-  }, []);
+    }
+  }, [id, getToken]);
+
+  useAsyncEffect(async (signal) => {
+    try {
+      const token = getToken();
+      const data = await fetchAllNews(token || undefined, signal);
+      if (signal.aborted) return;
+      setAllNews(data.news);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error fetching all news:', err);
+    }
+  }, [getToken]);
 
   // Check admin status when user changes
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) {
+  useAsyncEffect(async (signal) => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    
+    try {
+      const token = getToken();
+      if (!token) {
         setIsAdmin(false);
         return;
       }
       
-      try {
-        const token = getToken();
-        if (!token) {
-          setIsAdmin(false);
-          return;
-        }
-        
-        const adminCheck = await checkAdminStatus(token);
-        setIsAdmin(adminCheck.isAdmin);
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        setIsAdmin(false);
-      }
-    };
-    
-    checkAdmin();
+      const adminCheck = await checkAdminStatus(token, signal);
+      if (signal.aborted) return;
+      setIsAdmin(adminCheck.isAdmin);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error checking admin status:', err);
+      setIsAdmin(false);
+    }
   }, [user, getToken]);
 
   useEffect(() => {
@@ -107,21 +119,6 @@ const NewsDetailPage: React.FC = () => {
     );
     
     return newerUpdates.length === 0;
-  };
-
-  const fetchNewsItem = async (newsId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const token = getToken();
-      const data = await fetchNewsById(newsId, token || undefined);
-      setNews(data);
-    } catch (err) {
-      setError('Failed to load news article');
-      console.error('Error fetching news item:', err);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleLike = async () => {

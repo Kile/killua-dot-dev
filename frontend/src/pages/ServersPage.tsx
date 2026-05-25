@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { DiscordGuild } from '../types/auth';
 import { Server, Lock, Plus, Crown, Shield } from 'lucide-react';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const ServersPage: React.FC = () => {
   const { user, guilds: cachedGuilds, guildsLoading, fetchGuilds } = useAuth();
@@ -12,31 +13,30 @@ const ServersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadGuilds = async () => {
-      if (!user) return;
+  useAsyncEffect(async (signal) => {
+    if (!user) return;
 
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Use cached guilds from context (will fetch if cache is stale)
-        const userGuilds = await fetchGuilds();
-        setGuilds(userGuilds);
-      } catch (err) {
-        console.error('Error loading guilds:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load servers');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // If we already have cached guilds, use them immediately
     if (cachedGuilds && !guildsLoading) {
       setGuilds(cachedGuilds);
       setLoading(false);
-    } else {
-      loadGuilds();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const userGuilds = await fetchGuilds();
+      if (signal.aborted) return;
+      setGuilds(userGuilds);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error loading guilds:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load servers');
+    } finally {
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
   }, [user, fetchGuilds, cachedGuilds, guildsLoading]);
 

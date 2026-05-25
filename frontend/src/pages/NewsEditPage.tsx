@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, X } from 'lucide-react';
 import type { CreateNewsRequest, EditNewsRequest, NewsType } from '../types/news';
@@ -15,6 +15,7 @@ import TagInput from '../components/TagInput';
 import CdnFileSelector from '../components/CdnFileSelector';
 import { getDefaultPlaceholderUrl, getDefaultPlaceholderAlt } from '../utils/imageUtils';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const NewsEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -102,12 +103,14 @@ const NewsEditPage: React.FC = () => {
     }));
   };
 
-  const fetchNewsItem = async (newsId: string) => {
+  useAsyncEffect(async (signal) => {
+    if (!isEdit || !id) return;
     try {
       setLoading(true);
       setError(null);
       const token = getToken();
-      const data = await fetchNewsById(newsId, token || undefined);
+      const data = await fetchNewsById(id, token || undefined, signal);
+      if (signal.aborted) return;
       
       setFormData({
         title: data.title,
@@ -120,39 +123,43 @@ const NewsEditPage: React.FC = () => {
         notify_users: data.notify_users
       });
       
-      // Set default image visibility based on whether the news item has custom images
       setShowDefaultImage(!data.images || data.images.length === 0);
       
-      // Convert links object to input array
       const linksArray = Object.entries(data.links || {}).map(([key, value]) => ({ key, value: String(value) }));
       setLinkInputs(linksArray);
     } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
       setError('Failed to load news article');
       console.error('Error fetching news item:', err);
     } finally {
-      setLoading(false);
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, [id, isEdit, getToken]);
 
-  const fetchLastUpdate = async () => {
+  useAsyncEffect(async (signal) => {
+    if (formData.type !== 'update') {
+      setLastUpdate(null);
+      return;
+    }
+
     try {
       const token = getToken();
-      const data = await fetchAllNews(token || undefined);
+      const data = await fetchAllNews(token || undefined, signal);
+      if (signal.aborted) return;
+
       const updatePosts = data.news.filter((item: any) => item.type === 'update' && item.published);
       if (updatePosts.length > 0) {
-        // If editing, find the update that comes before the current one chronologically
         if (isEdit && id) {
-          // Find the current update being edited to get its timestamp
           const currentUpdate = updatePosts.find((item: any) => item._id === id);
           if (currentUpdate) {
             const currentTimestamp = new Date(currentUpdate.timestamp).getTime();
-            // Find all updates that come before this one chronologically
             const previousUpdates = updatePosts.filter((item: any) => {
               const itemTimestamp = new Date(item.timestamp).getTime();
               return item._id !== id && itemTimestamp < currentTimestamp;
             });
             if (previousUpdates.length > 0) {
-              // Sort by timestamp (newest first) and get the most recent previous update
               const sortedPrevious = previousUpdates.sort((a: any, b: any) => 
                 new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
               );
@@ -161,14 +168,12 @@ const NewsEditPage: React.FC = () => {
               setLastUpdate(null);
             }
           } else {
-            // If current update not found, just get the most recent one
             const sortedUpdates = updatePosts.sort((a: any, b: any) => 
               new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
             );
             setLastUpdate(sortedUpdates[0]);
           }
         } else {
-          // For new updates, get the most recent one
           const sortedUpdates = updatePosts.sort((a: any, b: any) => 
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
           );
@@ -178,24 +183,11 @@ const NewsEditPage: React.FC = () => {
         setLastUpdate(null);
       }
     } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
       console.error('Error fetching last update:', err);
       setLastUpdate(null);
     }
-  };
-
-  useEffect(() => {
-    if (isEdit && id) {
-      fetchNewsItem(id);
-    }
-  }, [id, isEdit]);
-
-  useEffect(() => {
-    if (formData.type === 'update') {
-      fetchLastUpdate();
-    } else {
-      setLastUpdate(null);
-    }
-  }, [formData.type, id, isEdit]);
+  }, [formData.type, id, isEdit, getToken]);
 
   // Check if user is logged in
   if (!user) {

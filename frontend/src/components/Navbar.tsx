@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Bot, LogOut, ChevronDown, Settings, Shield, Crown, Server } from 'lucide-react';
 import { checkAdminStatus } from '../services/adminService';
 import { getPremiumTierInfo } from '../utils/premiumTiers';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const Navbar: React.FC = () => {
   const { user, logout, login } = useAuth();
@@ -19,56 +20,53 @@ const Navbar: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Check admin status when user changes
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) {
-        setIsAdmin(null);
+  useAsyncEffect(async (signal) => {
+    if (!user) {
+      setIsAdmin(null);
+      return;
+    }
+    
+    try {
+      const jwtToken = localStorage.getItem('discord_token');
+      if (!jwtToken) {
+        setIsAdmin(false);
         return;
       }
       
-      try {
-        const jwtToken = localStorage.getItem('discord_token');
-        if (!jwtToken) {
-          setIsAdmin(false);
-          return;
-        }
-        
-        const adminCheck = await checkAdminStatus(jwtToken);
-        setIsAdmin(adminCheck.isAdmin);
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdmin();
+      const adminCheck = await checkAdminStatus(jwtToken, signal);
+      if (signal.aborted) return;
+      setIsAdmin(adminCheck.isAdmin);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error checking admin status:', err);
+      setIsAdmin(false);
+    }
   }, [user]);
 
   // Fetch user info from API (not Discord profile)
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        if (!user) {
-          setApiIsPremium(false);
-          setApiPremiumTier(null);
-          setDisplayName(null);
-          return;
-        }
-        const jwtToken = localStorage.getItem('discord_token');
-        if (!jwtToken) return;
-        const res = await fetch('/api/auth/user/info', {
-          headers: { Authorization: `Bearer ${jwtToken}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        setApiIsPremium(Boolean(data.is_premium));
-        setApiPremiumTier(data.premium_tier ?? null);
-        setDisplayName(data.display_name ?? null);
-      } catch {
-        // ignore
+  useAsyncEffect(async (signal) => {
+    try {
+      if (!user) {
+        setApiIsPremium(false);
+        setApiPremiumTier(null);
+        setDisplayName(null);
+        return;
       }
-    };
-    fetchUserInfo();
+      const jwtToken = localStorage.getItem('discord_token');
+      if (!jwtToken) return;
+      const res = await fetch('/api/auth/user/info', {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+        signal,
+      });
+      if (signal.aborted || !res.ok) return;
+      const data = await res.json();
+      if (signal.aborted) return;
+      setApiIsPremium(Boolean(data.is_premium));
+      setApiPremiumTier(data.premium_tier ?? null);
+      setDisplayName(data.display_name ?? null);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+    }
   }, [user]);
 
   const isActive = (path: string) => {

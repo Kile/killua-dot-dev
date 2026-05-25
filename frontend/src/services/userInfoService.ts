@@ -76,12 +76,13 @@ interface UserInfoResponse {
   premium_tier: string | null;
 }
 
-export const fetchUserInfo = async (jwtToken: string): Promise<UserInfoResponse> => {
+export const fetchUserInfo = async (jwtToken: string, signal?: AbortSignal): Promise<UserInfoResponse> => {
   const response = await fetch('/api/auth/user/info', {
     headers: {
       'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
     },
+    signal,
   });
 
   if (!response.ok) {

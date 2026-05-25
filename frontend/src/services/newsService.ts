@@ -9,7 +9,7 @@ import type {
 
 const API_BASE_URL = '/api/news';
 
-export const fetchAllNews = async (jwtToken?: string): Promise<NewsResponseData> => {
+export const fetchAllNews = async (jwtToken?: string, signal?: AbortSignal): Promise<NewsResponseData> => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -22,6 +22,7 @@ export const fetchAllNews = async (jwtToken?: string): Promise<NewsResponseData>
   const response = await fetch(API_BASE_URL, {
     method: 'GET',
     headers,
+    signal,
   });
 
   if (!response.ok) {
@@ -31,7 +32,7 @@ export const fetchAllNews = async (jwtToken?: string): Promise<NewsResponseData>
   return response.json();
 };
 
-export const fetchNewsById = async (newsId: string, jwtToken?: string): Promise<NewsResponse> => {
+export const fetchNewsById = async (newsId: string, jwtToken?: string, signal?: AbortSignal): Promise<NewsResponse> => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -44,6 +45,7 @@ export const fetchNewsById = async (newsId: string, jwtToken?: string): Promise<
   const response = await fetch(`${API_BASE_URL}/${newsId}`, {
     method: 'GET',
     headers,
+    signal,
   });
 
   if (!response.ok) {

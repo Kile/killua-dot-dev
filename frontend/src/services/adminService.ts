@@ -87,12 +87,13 @@ interface AdminUserInfoResponse {
   premium_tier: string | null;
 }
 
-export const checkAdminStatus = async (jwtToken: string): Promise<AdminCheckResponse> => {
+export const checkAdminStatus = async (jwtToken: string, signal?: AbortSignal): Promise<AdminCheckResponse> => {
   const response = await fetch('/api/auth/admin/check', {
     headers: {
       'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
     },
+    signal,
   });
 
   if (!response.ok) {

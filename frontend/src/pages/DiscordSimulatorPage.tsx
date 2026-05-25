@@ -6,6 +6,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer';
 import { useAuth } from '../contexts/AuthContext';
 import { botCategories } from '../utils/exploreCategories';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 // Discord avatar colors for randomization (matching reviews section)
 const AVATAR_COLORS = [
@@ -1181,26 +1182,25 @@ const DiscordSimulatorPage: React.FC = () => {
   }, []);
 
   // Fetch display name from API (same as navbar)
-  useEffect(() => {
-    const fetchDisplayName = async () => {
-      try {
-        if (!user) {
-          setDisplayName(null);
-          return;
-        }
-        const jwtToken = localStorage.getItem('discord_token');
-        if (!jwtToken) return;
-        const res = await fetch('/api/auth/user/info', {
-          headers: { Authorization: `Bearer ${jwtToken}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        setDisplayName(data.display_name ?? null);
-      } catch {
-        // ignore
+  useAsyncEffect(async (signal) => {
+    try {
+      if (!user) {
+        setDisplayName(null);
+        return;
       }
-    };
-    fetchDisplayName();
+      const jwtToken = localStorage.getItem('discord_token');
+      if (!jwtToken) return;
+      const res = await fetch('/api/auth/user/info', {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+        signal,
+      });
+      if (signal.aborted || !res.ok) return;
+      const data = await res.json();
+      if (signal.aborted) return;
+      setDisplayName(data.display_name ?? null);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+    }
   }, [user]);
 
   // Play Discord notification sound

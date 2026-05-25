@@ -11,6 +11,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer';
 import ServerStats from '../components/ServerStats';
 import BadgeIcon from '../components/BadgeIcon';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 interface LocationState {
   guild?: DiscordGuild;
@@ -118,9 +119,58 @@ const ServerSettingsPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadGuildData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useAsyncEffect(async (signal) => {
+    if (!user || !serverId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const jwtToken = getToken();
+      if (!jwtToken) {
+        throw new Error('No authentication token found');
+      }
+
+      let foundGuild = locationState?.guild;
+      
+      if (!foundGuild || foundGuild.id !== serverId) {
+        if (cachedGuilds) {
+          foundGuild = cachedGuilds.find(g => g.id === serverId);
+        }
+        
+        if (!foundGuild) {
+          const userGuilds = await fetchGuilds();
+          if (signal.aborted) return;
+          foundGuild = userGuilds.find(g => g.id === serverId);
+        }
+      }
+      
+      if (!foundGuild) {
+        throw new Error('Server not found or you don\'t have access to it');
+      }
+      
+      if (!foundGuild.editable) {
+        throw new Error('Killua is not in this server. Please invite the bot first.');
+      }
+
+      if (signal.aborted) return;
+      setGuild(foundGuild);
+
+      const info = await fetchGuildInfo(jwtToken, serverId, signal);
+      if (signal.aborted) return;
+
+      setGuildInfo(info);
+      setPrefix(info.prefix);
+      setOriginalPrefix(info.prefix);
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error loading guild:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load server');
+    } finally {
+      if (!signal.aborted) {
+        setLoading(false);
+      }
+    }
   }, [user, serverId]);
 
   const getGuildIconUrl = (guild: DiscordGuild) => {

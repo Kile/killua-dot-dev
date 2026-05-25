@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
@@ -8,6 +8,7 @@ import Loading from './Loading';
 import MarkdownRenderer from './MarkdownRenderer';
 import UpdateProgression from './UpdateProgression';
 import { getThumbnailClasses } from '../utils/imageUtils';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const NewsAdminPanel: React.FC = () => {
   const { getToken } = useAuth();
@@ -16,9 +17,25 @@ const NewsAdminPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchNewsData();
-  }, []);
+  useAsyncEffect(async (signal) => {
+    try {
+      setLoading(true);
+      const token = getToken();
+      const data = await fetchAllNews(token || undefined, signal);
+      if (signal.aborted) return;
+      setNews(data.news.sort((a: NewsResponse, b: NewsResponse) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ));
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      setError('Failed to load news');
+      console.error('Error fetching news:', err);
+    } finally {
+      if (!signal.aborted) {
+        setLoading(false);
+      }
+    }
+  }, [getToken]);
 
   const fetchNewsData = async () => {
     try {

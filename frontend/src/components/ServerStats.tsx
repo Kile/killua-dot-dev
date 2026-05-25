@@ -3,6 +3,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { fetchCommandUsage, type CommandUsageItem } from '../services/guildService';
 import StyledSelect from './StyledSelect';
 import { TrendingUp, Clock, BarChart3 } from 'lucide-react';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 interface ServerStatsProps {
   jwtToken: string;
@@ -113,50 +114,48 @@ const ServerStats: React.FC<ServerStatsProps> = ({ jwtToken, guildId, onStatsDat
   }, [totalFrom, totalTo, desiredDataInterval]);
 
   // Fetch command usage data
-  useEffect(() => {
-    const fetchData = async () => {
-      const cacheKey = `${guildId}-${from}-${to}-${effectiveDataInterval}`;
-      const cached = commandUsageCache.get(cacheKey);
+  useAsyncEffect(async (signal) => {
+    const cacheKey = `${guildId}-${from}-${to}-${effectiveDataInterval}`;
+    const cached = commandUsageCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      setCommandUsage(cached.data);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
       
-      // Check cache
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        setCommandUsage(cached.data);
-        setLoading(false);
-        setError(null);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await fetchCommandUsage(jwtToken, guildId, from, to, effectiveDataInterval);
-        
-        if ('error' in response) {
-          const errorMessage = response.error || 'Failed to fetch command usage';
-          setError(errorMessage);
-          setCommandUsage([]);
-        } else {
-          setCommandUsage(response);
-          onStatsDataChange?.({
-            from,
-            to,
-            interval: effectiveDataInterval,
-            data: response,
-          });
-          // Cache the result
-          commandUsageCache.set(cacheKey, { data: response, timestamp: Date.now() });
-        }
-      } catch (err) {
-        console.error('Error fetching command usage:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch command usage');
+      const response = await fetchCommandUsage(jwtToken, guildId, from, to, effectiveDataInterval, signal);
+      if (signal.aborted) return;
+      
+      if ('error' in response) {
+        const errorMessage = response.error || 'Failed to fetch command usage';
+        setError(errorMessage);
         setCommandUsage([]);
-      } finally {
+      } else {
+        setCommandUsage(response);
+        onStatsDataChange?.({
+          from,
+          to,
+          interval: effectiveDataInterval,
+          data: response,
+        });
+        commandUsageCache.set(cacheKey, { data: response, timestamp: Date.now() });
+      }
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error fetching command usage:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch command usage');
+      setCommandUsage([]);
+    } finally {
+      if (!signal.aborted) {
         setLoading(false);
       }
-    };
-
-    fetchData();
+    }
   }, [jwtToken, guildId, from, to, effectiveDataInterval, onStatsDataChange]);
 
   useEffect(() => {
@@ -177,31 +176,30 @@ const ServerStats: React.FC<ServerStatsProps> = ({ jwtToken, guildId, onStatsDat
   }, [interval, commandUsage]);
 
   // Fetch totals data (always last 2 weeks, independent of filters)
-  useEffect(() => {
-    const fetchTotals = async () => {
-      const cacheKey = `${guildId}-${totalFrom}-${totalTo}-${totalsDataInterval}`;
-      const cached = commandUsageCache.get(cacheKey);
+  useAsyncEffect(async (signal) => {
+    const cacheKey = `${guildId}-${totalFrom}-${totalTo}-${totalsDataInterval}`;
+    const cached = commandUsageCache.get(cacheKey);
 
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        setTotalUsage(cached.data);
-        return;
-      }
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      setTotalUsage(cached.data);
+      return;
+    }
 
-      try {
-        const response = await fetchCommandUsage(jwtToken, guildId, totalFrom, totalTo, totalsDataInterval);
-        if ('error' in response) {
-          setTotalUsage([]);
-        } else {
-          setTotalUsage(response);
-          commandUsageCache.set(cacheKey, { data: response, timestamp: Date.now() });
-        }
-      } catch (err) {
-        console.error('Error fetching totals:', err);
+    try {
+      const response = await fetchCommandUsage(jwtToken, guildId, totalFrom, totalTo, totalsDataInterval, signal);
+      if (signal.aborted) return;
+
+      if ('error' in response) {
         setTotalUsage([]);
+      } else {
+        setTotalUsage(response);
+        commandUsageCache.set(cacheKey, { data: response, timestamp: Date.now() });
       }
-    };
-
-    fetchTotals();
+    } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
+      console.error('Error fetching totals:', err);
+      setTotalUsage([]);
+    }
   }, [jwtToken, guildId, totalFrom, totalTo, totalsDataInterval]);
 
   // Get unique commands list

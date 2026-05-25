@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Search, Image, File } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { listFiles, isImageFile } from '../services/fileService';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 interface CdnFile {
   name: string;
@@ -29,13 +30,9 @@ const CdnFileSelector: React.FC<CdnFileSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchCdnFiles();
-    }
-  }, [isOpen]);
+  useAsyncEffect(async (signal) => {
+    if (!isOpen) return;
 
-  const fetchCdnFiles = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -45,17 +42,14 @@ const CdnFileSelector: React.FC<CdnFileSelectorProps> = ({
         throw new Error('No authentication token');
       }
 
-      // Use the file service to get CDN files
-      const filePaths = await listFiles(token);
+      const filePaths = await listFiles(token, signal);
+      if (signal.aborted) return;
       
-      // Filter files based on accepted types and only show files from /news/ directory
       const filteredFiles = filePaths
         .filter((path: string) => {
-          // Only show files from the /news/ directory
           if (!path.startsWith('news/')) {
             return false;
           }
-          // Filter by image type if specified
           if (acceptedTypes.includes('image/*')) {
             return isImageFile(path);
           }
@@ -72,14 +66,18 @@ const CdnFileSelector: React.FC<CdnFileSelectorProps> = ({
           };
         });
 
+      if (signal.aborted) return;
       setFiles(filteredFiles);
     } catch (err) {
+      if (signal.aborted || isAbortError(err)) return;
       setError('Failed to load CDN files');
       console.error('Error fetching CDN files:', err);
     } finally {
-      setLoading(false);
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, [isOpen, getToken, acceptedTypes]);
 
   const filteredFiles = files.filter(file =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())

@@ -34,11 +34,12 @@ const handleApiError = async (response: Response, defaultMessage: string): Promi
   throw new Error(defaultMessage);
 };
 
-export const getFileViewerToken = async (jwtToken: string): Promise<FileViewerToken> => {
+export const getFileViewerToken = async (jwtToken: string, signal?: AbortSignal): Promise<FileViewerToken> => {
   const response = await fetch('/api/image/fileviewer-token', {
     headers: {
       'Authorization': `Bearer ${jwtToken}`,
     },
+    signal,
   });
 
   if (!response.ok) {
@@ -112,11 +113,12 @@ export const deleteFile = async (path: string, token: string): Promise<void> => 
   }
 };
 
-export const listFiles = async (token: string): Promise<string[]> => {
+export const listFiles = async (token: string, signal?: AbortSignal): Promise<string[]> => {
   const response = await fetch('/api/image/list', {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+    signal,
   });
 
   if (!response.ok) {

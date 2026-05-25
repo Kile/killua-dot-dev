@@ -1,46 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchUserInfo } from '../services/userInfoService';
 import type { UserInfoResponse } from '../services/userInfoService';
 import UserAccountView from '../components/UserAccountView';
 import PageTitle from '../components/PageTitle';
+import { isAbortError, useAsyncEffect } from '../hooks/useAsyncEffect';
 
 const AccountPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [userInfo, setUserInfo] = useState<UserInfoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUserInfo = async () => {
+  const loadUserInfo = async (signal?: AbortSignal) => {
     if (!user) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
-      // Get the JWT token from localStorage
+
       const jwtToken = localStorage.getItem('discord_token');
       if (!jwtToken) {
         throw new Error('No authentication token found');
       }
-      
-      // Fetch user info from our backend (which securely fetches from external API)
-      const userData = await fetchUserInfo(jwtToken);
+
+      const userData = await fetchUserInfo(jwtToken, signal);
+      if (signal?.aborted) return;
       setUserInfo(userData);
-      
-      // UserInfo data is passed directly to UserAccountView component
     } catch (err) {
+      if (signal?.aborted || isAbortError(err)) return;
       console.error('Error loading user info:', err);
       setError(err instanceof Error ? err.message : 'Failed to load user info');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
-  useEffect(() => {
-    loadUserInfo();
+  useAsyncEffect(async (signal) => {
+    await loadUserInfo(signal);
   }, [user]);
 
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-discord-darker flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-discord-blurple mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -98,7 +110,7 @@ const AccountPage: React.FC = () => {
       <UserAccountView 
         userInfo={userDataForView}
         isAdmin={false}
-        onSettingsUpdate={loadUserInfo}
+        onSettingsUpdate={() => loadUserInfo()}
       />
     </>
   );
